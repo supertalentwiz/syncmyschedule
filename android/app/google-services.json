@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "237228165143",
+    "project_id": "syncmyschedule-58722",
+    "storage_bucket": "syncmyschedule-58722.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237228165143:android:3e9767106ab916a97eb452",
+        "android_client_info": {
+          "package_name": "com.syncmyschedule"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjWOZyM3lwqd_oYkaS3nLjiLsM3xOLYrE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
