@@ -1,4 +1,4 @@
-package com.example.syncmyschedule
+package com.syncmyschedule
 
 import io.flutter.embedding.android.FlutterActivity
 
