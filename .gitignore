@@ -1,0 +1,107 @@
+# ========================================
+# Flutter & Dart
+# ========================================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+build/
+coverage/
+generated_plugin_registrant.dart
+
+# Remove if you want to check in binaries
+*.lock
+*.log
+
+# ========================================
+# Android
+# ========================================
+**/android/**/gradle-wrapper.jar
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+
+# ========================================
+# iOS / macOS
+# ========================================
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Generated.xcconfig
+**/ios/.symlinks/
+**/ios/Pods/
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+**/macos/Runner/GeneratedPluginRegistrant.*
+
+# Xcode user data
+**/ios/Runner.xcodeproj/project.xcworkspace/
+**/ios/Runner.xcworkspace/
+**/ios/Runner.xcodeproj/xcuserdata/
+**/macos/Runner.xcodeproj/xcuserdata/
+
+# ========================================
+# Windows
+# ========================================
+**/windows/flutter/ephemeral/
+**/windows/Runner/GeneratedPluginRegistrant.*
+
+# ========================================
+# Linux
+# ========================================
+**/linux/flutter/ephemeral/
+**/linux/Runner/GeneratedPluginRegistrant.*
+
+# ========================================
+# Web
+# ========================================
+lib/generated_plugin_registrant.dart
+.flutter-plugins
+.flutter-plugins-dependencies
+.flutter-version
+node_modules/
+
+# ========================================
+# IDEs
+# ========================================
+
+# IntelliJ / Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+.history/
+.dart_tool/
+
+# ========================================
+# OS-specific
+# ========================================
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ========================================
+# Misc
+# ========================================
+*.lock
+*.log
+*.tmp
+*.swp
+*.bak
+*.orig
