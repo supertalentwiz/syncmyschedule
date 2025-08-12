@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart'; // <-- needed for SystemUiOverlayStyle
+import 'package:flutter/services.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -18,11 +18,10 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Set status bar icons/text to light color
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
-      statusBarColor: Color(0xFF002B53), // same as header background
-      statusBarIconBrightness: Brightness.light, // Android
-      statusBarBrightness: Brightness.dark, // iOS
+      statusBarColor: Color(0xFF002B53),
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
     ));
   }
 
@@ -78,6 +77,45 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  InputDecoration _inputDecoration(String label, {String? hint}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.orange),
+      hintText: hint,
+      hintStyle: TextStyle(color: Colors.orange.withOpacity(0.7)),
+      filled: true,
+      fillColor: Colors.grey[200],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.orange, width: 2),
+      ),
+    );
+  }
+
+  Widget _textField({
+    required TextEditingController controller,
+    required String label,
+    String? hint,
+    bool obscure = false,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      style: TextStyle(color: Colors.orange),
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      decoration: _inputDecoration(label, hint: hint),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,33 +130,30 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Color(0xFF002B53),
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
-              child: DefaultTextStyle(
-                style: TextStyle(color: Colors.white),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Image.asset(
-                      'assets/logo.png',
-                      height: 170,
-                      width: 170,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Image.asset(
+                    'assets/logo.png',
+                    height: 170,
+                    width: 170,
+                  ),
+                  SizedBox(height: 10),
+                  RichText(
+                    text: TextSpan(
+                      text: 'S',
+                      style: TextStyle(color: Colors.orange, fontSize: 32, fontWeight: FontWeight.bold),
+                      children: [
+                        TextSpan(text: 'ync', style: TextStyle(color: Colors.white)),
+                        TextSpan(text: 'M', style: TextStyle(color: Colors.orange)),
+                        TextSpan(text: 'y', style: TextStyle(color: Colors.white)),
+                        TextSpan(text: 'S', style: TextStyle(color: Colors.orange)),
+                        TextSpan(text: 'chedule', style: TextStyle(color: Colors.white)),
+                      ],
                     ),
-                    SizedBox(height: 10),
-                    RichText(
-                      text: TextSpan(
-                        text: 'S',
-                        style: TextStyle(color: Colors.orange, fontSize: 32, fontWeight: FontWeight.bold),
-                        children: [
-                          TextSpan(text: 'ync', style: TextStyle(color: Colors.white)),
-                          TextSpan(text: 'M', style: TextStyle(color: Colors.orange)),
-                          TextSpan(text: 'y', style: TextStyle(color: Colors.white)),
-                          TextSpan(text: 'S', style: TextStyle(color: Colors.orange)),
-                          TextSpan(text: 'chedule', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 20),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 20),
+                ],
               ),
             ),
             Padding(
@@ -126,55 +161,27 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
                   SizedBox(height: 30),
-                  TextField(
+                  _textField(
                     controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Color(0xFF002B53), width: 2),
-                      ),
-                    ),
+                    label: 'Email',
+                    hint: 'Enter your email',
                     keyboardType: TextInputType.emailAddress,
-                    autofocus: true,
                   ),
                   SizedBox(height: 15),
                   Stack(
                     alignment: Alignment.centerRight,
                     children: [
-                      TextField(
+                      _textField(
                         controller: _passwordController,
-                        obscureText: !_showPassword,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          filled: true,
-                          fillColor: Colors.grey[200],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF002B53), width: 2),
-                          ),
-                        ),
+                        label: 'Password',
+                        hint: 'Enter your password',
+                        obscure: !_showPassword,
                       ),
                       IconButton(
-                        icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
+                        icon: Icon(
+                          _showPassword ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.orange,
+                        ),
                         onPressed: () => setState(() => _showPassword = !_showPassword),
                       ),
                     ],
@@ -184,7 +191,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _loading ? null : _signIn,
-                      child: Text(_loading ? 'Signing in...' : 'Sign In'),
+                      child: Text(
+                        _loading ? 'Signing in...' : 'Sign In',
+                        style: TextStyle(color: Colors.white),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF002B53),
                         padding: EdgeInsets.symmetric(vertical: 14),
@@ -200,23 +210,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         text: "Don't have an account? ",
                         style: TextStyle(color: Color(0xFF002B53)),
                         children: [TextSpan(text: 'Sign up here', style: TextStyle(color: Colors.orange))],
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => showDialog(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: Text('Coming Soon'),
-                        content: Text('Password reset not implemented yet.'),
-                        actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text('OK'))],
-                      ),
-                    ),
-                    child: RichText(
-                      text: TextSpan(
-                        text: 'Forgot Password? ',
-                        style: TextStyle(color: Color(0xFF002B53)),
-                        children: [TextSpan(text: 'Send email', style: TextStyle(color: Colors.orange))],
                       ),
                     ),
                   ),

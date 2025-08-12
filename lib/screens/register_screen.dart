@@ -22,11 +22,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
-    // Light icons for status bar
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
       statusBarColor: Color(0xFF002B53),
-      statusBarIconBrightness: Brightness.light, // Android
-      statusBarBrightness: Brightness.dark, // iOS
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
     ));
   }
 
@@ -72,6 +71,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  InputDecoration _inputDecoration(String label, {String? hint}) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.orange),
+      hintText: hint,
+      hintStyle: TextStyle(color: Colors.orange.withOpacity(0.7)),
+      filled: true,
+      fillColor: Colors.grey[200],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.orange, width: 2),
+      ),
+    );
+  }
+
+  Widget _textField({
+    required TextEditingController controller,
+    required String label,
+    String? hint,
+    bool obscure = false,
+    TextInputType? keyboardType,
+  }) {
+    return TextField(
+      controller: controller,
+      style: TextStyle(color: Colors.orange),
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      decoration: _inputDecoration(label, hint: hint),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,7 +117,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // HEADER
             Container(
               width: double.infinity,
               height: 200,
@@ -87,126 +124,46 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 color: Color(0xFF002B53),
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
-              child: DefaultTextStyle(
-                style: TextStyle(color: Colors.white),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        text: 'S',
-                        style: TextStyle(color: Colors.orange, fontSize: 32, fontWeight: FontWeight.bold),
-                        children: [
-                          TextSpan(text: 'ync', style: TextStyle(color: Colors.white)),
-                          TextSpan(text: 'M', style: TextStyle(color: Colors.orange)),
-                          TextSpan(text: 'y', style: TextStyle(color: Colors.white)),
-                          TextSpan(text: 'S', style: TextStyle(color: Colors.orange)),
-                          TextSpan(text: 'chedule', style: TextStyle(color: Colors.white)),
-                        ],
-                      ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      text: 'S',
+                      style: TextStyle(color: Colors.orange, fontSize: 32, fontWeight: FontWeight.bold),
+                      children: [
+                        TextSpan(text: 'ync', style: TextStyle(color: Colors.white)),
+                        TextSpan(text: 'M', style: TextStyle(color: Colors.orange)),
+                        TextSpan(text: 'y', style: TextStyle(color: Colors.white)),
+                        TextSpan(text: 'S', style: TextStyle(color: Colors.orange)),
+                        TextSpan(text: 'chedule', style: TextStyle(color: Colors.white)),
+                      ],
                     ),
-                    SizedBox(height: 20),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 20),
+                ],
               ),
             ),
-            // FORM
             Padding(
               padding: EdgeInsets.all(24),
               child: Column(
                 children: [
                   SizedBox(height: 30),
-                  TextField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Full Name',
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Color(0xFF002B53), width: 2),
-                      ),
-                    ),
-                  ),
+                  _textField(controller: _nameController, label: 'Full Name', hint: 'Enter your full name'),
                   SizedBox(height: 15),
-                  TextField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Color(0xFF002B53), width: 2),
-                      ),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
+                  _textField(controller: _emailController, label: 'Email', hint: 'Enter your email', keyboardType: TextInputType.emailAddress),
                   SizedBox(height: 15),
-                  TextField(
-                    controller: _phoneController,
-                    decoration: InputDecoration(
-                      labelText: 'Phone Number (Optional)',
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Color(0xFF002B53), width: 2),
-                      ),
-                    ),
-                    keyboardType: TextInputType.phone,
-                  ),
+                  _textField(controller: _phoneController, label: 'Phone Number (Optional)', hint: 'Enter your phone number', keyboardType: TextInputType.phone),
                   SizedBox(height: 15),
                   Stack(
                     alignment: Alignment.centerRight,
                     children: [
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: !_showPassword,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          filled: true,
-                          fillColor: Colors.grey[200],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF002B53), width: 2),
-                          ),
-                        ),
-                      ),
+                      _textField(controller: _passwordController, label: 'Password', hint: 'Enter your password', obscure: !_showPassword),
                       IconButton(
-                        icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
+                        icon: Icon(
+                          _showPassword ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.orange,
+                        ),
                         onPressed: () => setState(() => _showPassword = !_showPassword),
                       ),
                     ],
@@ -215,29 +172,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Stack(
                     alignment: Alignment.centerRight,
                     children: [
-                      TextField(
-                        controller: _password2Controller,
-                        obscureText: !_showPassword2,
-                        decoration: InputDecoration(
-                          labelText: 'Confirm Password',
-                          filled: true,
-                          fillColor: Colors.grey[200],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: Color(0xFF002B53), width: 2),
-                          ),
-                        ),
-                      ),
+                      _textField(controller: _password2Controller, label: 'Confirm Password', hint: 'Re-enter your password', obscure: !_showPassword2),
                       IconButton(
-                        icon: Icon(_showPassword2 ? Icons.visibility_off : Icons.visibility),
+                        icon: Icon(
+                          _showPassword2 ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.orange,
+                        ),
                         onPressed: () => setState(() => _showPassword2 = !_showPassword2),
                       ),
                     ],
@@ -247,7 +187,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _loading ? null : _register,
-                      child: Text(_loading ? 'Signing up...' : 'Sign Up'),
+                      child: Text(
+                        _loading ? 'Signing up...' : 'Sign Up',
+                        style: TextStyle(color: Colors.white),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF002B53),
                         padding: EdgeInsets.symmetric(vertical: 14),
