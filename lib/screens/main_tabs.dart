@@ -52,7 +52,6 @@ class _MainTabsState extends State<MainTabs> {
 
   void _onItemTapped(int index) async {
     if (index == 1) {
-      // Show login dialog to get username/password
       final creds = await _showLoginDialog();
       if (creds == null) return; // user cancelled
 
@@ -91,25 +90,55 @@ class _MainTabsState extends State<MainTabs> {
     String username = '';
     String password = '';
 
+    // Orange color used in theme
+    const Color orange = Color(0xFFFF9800);
+
     return showDialog<Map<String, String>>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true, // allow dismiss by tapping outside
       builder: (context) {
         return AlertDialog(
-          title: Text('Enter FAA Credentials'),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            'Enter FAA Credentials',
+            style: TextStyle(color: orange, fontWeight: FontWeight.bold),
+          ),
           content: Form(
             key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Username or Email'),
+                  decoration: InputDecoration(
+                    labelText: 'Username or Email',
+                    labelStyle: TextStyle(color: orange),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: orange, width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: orange.withOpacity(0.5)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onSaved: (val) => username = val!.trim(),
                   validator: (val) =>
                       val == null || val.isEmpty ? 'Enter username' : null,
                 ),
+                SizedBox(height: 12),
                 TextFormField(
-                  decoration: InputDecoration(labelText: 'Password'),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    labelStyle: TextStyle(color: orange),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: orange, width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: orange.withOpacity(0.5)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   obscureText: true,
                   onSaved: (val) => password = val!.trim(),
                   validator: (val) =>
@@ -120,17 +149,43 @@ class _MainTabsState extends State<MainTabs> {
           ),
           actions: [
             TextButton(
-              child: Text('Cancel'),
+              child: Text('Cancel', style: TextStyle(color: orange)),
               onPressed: () => Navigator.pop(context, null),
             ),
-            ElevatedButton(
-              child: Text('Sync'),
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _formKey.currentState!.save();
-                  Navigator.pop(context, {'username': username, 'password': password});
-                }
-              },
+            Container(
+              margin: EdgeInsets.only(bottom: 8, right: 8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                ),
+                child: Text('Sync', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    Navigator.pop(context, {'username': username, 'password': password});
+                  }
+                },
+              ),
             ),
           ],
         );
@@ -147,8 +202,8 @@ class _MainTabsState extends State<MainTabs> {
         decoration: BoxDecoration(
           color: Color(0xFF002B53),
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(25),
-            topRight: Radius.circular(25),
+            topLeft: Radius.circular(40),
+            topRight: Radius.circular(40),
           ),
           boxShadow: [
             BoxShadow(
@@ -171,8 +226,26 @@ class _MainTabsState extends State<MainTabs> {
               onPressed: () => _onItemTapped(0),
               tooltip: 'Schedule',
             ),
-            SizedBox(
+
+            // Sync Now Button with gradient & margin for vertical positioning
+            Container(
+              margin: EdgeInsets.only(bottom: 12), // lift button above bottom bar edge
               width: 160,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
               child: ElevatedButton.icon(
                 onPressed: () => _onItemTapped(1),
                 icon: Icon(Icons.refresh, size: 24, color: Colors.white),
@@ -185,14 +258,17 @@ class _MainTabsState extends State<MainTabs> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 14),
+                  elevation: 0,
                 ),
               ),
             ),
+
             IconButton(
               icon: Icon(
                 Icons.person,
