@@ -20,7 +20,10 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _updateDateTime();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateDateTime());
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updateDateTime(),
+    );
   }
 
   void _updateDateTime() {
@@ -51,7 +54,9 @@ class _MainScreenState extends State<MainScreen> {
           const SizedBox(height: 12), // space below AppBar
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16), // horizontal margin
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+            ), // horizontal margin
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
@@ -62,8 +67,8 @@ class _MainScreenState extends State<MainScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(25),    // rounded top corners added
-                  topRight: Radius.circular(25),   // rounded top corners added
+                  topLeft: Radius.circular(25), // rounded top corners added
+                  topRight: Radius.circular(25), // rounded top corners added
                   bottomLeft: Radius.circular(25),
                   bottomRight: Radius.circular(25),
                 ),
@@ -82,11 +87,15 @@ class _MainScreenState extends State<MainScreen> {
                   Text(
                     _dateString,
                     style: const TextStyle(
-                      fontSize: 36,
+                      fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       shadows: [
-                        Shadow(color: Colors.black38, blurRadius: 4, offset: Offset(1, 2))
+                        Shadow(
+                          color: Colors.black38,
+                          blurRadius: 4,
+                          offset: Offset(1, 2),
+                        ),
                       ],
                     ),
                   ),
@@ -123,7 +132,10 @@ class _MainScreenState extends State<MainScreen> {
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
-                          leading: const Icon(Icons.event_note, color: Colors.orange),
+                          leading: const Icon(
+                            Icons.event_note,
+                            color: Colors.orange,
+                          ),
                           title: Text(
                             'Shift Code: ${shift['code']}',
                             style: const TextStyle(fontWeight: FontWeight.bold),
