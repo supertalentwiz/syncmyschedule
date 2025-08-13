@@ -4,8 +4,10 @@ import 'package:intl/intl.dart';
 
 class MainScreen extends StatefulWidget {
   final List<Map<String, String>> shifts;
+  final String? errorMessage; // Add this param
 
-  const MainScreen({Key? key, required this.shifts}) : super(key: key);
+  const MainScreen({Key? key, required this.shifts, this.errorMessage})
+    : super(key: key);
 
   @override
   _MainScreenState createState() => _MainScreenState();
@@ -51,27 +53,19 @@ class _MainScreenState extends State<MainScreen> {
       backgroundColor: const Color(0xFFF5F5F5),
       body: Column(
         children: [
-          const SizedBox(height: 12), // space below AppBar
-
+          const SizedBox(height: 12),
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ), // horizontal margin
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(25), // rounded top corners added
-                  topRight: Radius.circular(25), // rounded top corners added
-                  bottomLeft: Radius.circular(25),
-                  bottomRight: Radius.circular(25),
-                ),
+                borderRadius: BorderRadius.all(Radius.circular(25)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black26,
@@ -87,7 +81,7 @@ class _MainScreenState extends State<MainScreen> {
                   Text(
                     _dateString,
                     style: const TextStyle(
-                      fontSize: 32,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       shadows: [
@@ -112,39 +106,58 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 12),
 
           Expanded(
-            child: widget.shifts.isEmpty
+            child: widget.errorMessage != null
                 ? Center(
-                    child: Text(
-                      'No schedule loaded.\nTap "Sync Now" to fetch your shifts.',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        widget.errorMessage!,
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: widget.shifts.length,
-                    itemBuilder: (context, index) {
-                      final shift = widget.shifts[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        child: ListTile(
-                          leading: const Icon(
-                            Icons.event_note,
-                            color: Colors.orange,
+                : (widget.shifts.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No schedule loaded.\nTap "Sync Now" to fetch your shifts.',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          title: Text(
-                            'Shift Code: ${shift['code']}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text('Date: ${shift['date']}'),
-                        ),
-                      );
-                    },
-                  ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: widget.shifts.length,
+                          itemBuilder: (context, index) {
+                            final shift = widget.shifts[index];
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 8),
+                              child: ListTile(
+                                leading: const Icon(
+                                  Icons.event_note,
+                                  color: Colors.orange,
+                                ),
+                                title: Text(
+                                  'Shift Code: ${shift['code']}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                subtitle: Text('Date: ${shift['date']}'),
+                              ),
+                            );
+                          },
+                        )),
           ),
         ],
       ),

@@ -13,17 +13,16 @@ class MainTabs extends StatefulWidget {
 class _MainTabsState extends State<MainTabs> {
   int _selectedIndex = 0;
   List<Map<String, String>> _shifts = [];
+  String? _errorMessage; // Holds error text to show in schedule screen
 
-  // Password visibility toggle for the dialog
   bool _showPassword = false;
 
   List<Widget> get _pages => [
-    MainScreen(shifts: _shifts),
+    MainScreen(shifts: _shifts, errorMessage: _errorMessage),
     SubscriptionScreen(),
     ProfileScreen(),
   ];
 
-  // Call the deployed Firebase function
   Future<List<Map<String, String>>> fetchScheduleFromFirebase({
     required String username,
     required String password,
@@ -53,20 +52,47 @@ class _MainTabsState extends State<MainTabs> {
         throw Exception('No schedule returned');
       }
     } catch (e) {
-      throw Exception('Error fetching schedule: $e');
+      // Pass the raw error message for display
+      throw Exception(e.toString());
     }
   }
 
-  // Handler for bottom nav taps and sync button tap
+  Future<void> _showLoadingModal() async {
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: Row(
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(),
+              ),
+              SizedBox(width: 20),
+              Expanded(
+                child: Text(
+                  'Fetching schedule...',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _onItemTapped(int index) async {
     if (index == 1) {
-      // Sync button tapped: show credential dialog and fetch schedule
       final creds = await _showLoginDialog();
-      if (creds == null) return; // user cancelled
+      if (creds == null) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Fetching schedule...')));
+      _showLoadingModal();
 
       try {
         final fetchedShifts = await fetchScheduleFromFirebase(
@@ -76,37 +102,35 @@ class _MainTabsState extends State<MainTabs> {
 
         setState(() {
           _shifts = fetchedShifts;
-          _selectedIndex = 0; // switch to schedule screen
+          _errorMessage = null; // clear previous errors on success
+          _selectedIndex = 0; // show schedule screen
         });
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Schedule fetched!')));
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to fetch schedule: $e')));
+        setState(() {
+          _errorMessage = 'Failed to fetch schedule:\n${e.toString()}';
+          _shifts = [];
+          _selectedIndex = 0; // show schedule screen with error
+        });
+      } finally {
+        Navigator.of(context).pop(); // close loading modal
       }
     } else {
-      // Just switch tabs normally
       setState(() {
         _selectedIndex = index;
       });
     }
   }
 
-  // Dialog to get username and password with password visibility toggle
   Future<Map<String, String>?> _showLoginDialog() async {
     final _formKey = GlobalKey<FormState>();
     String username = '';
     String password = '';
 
-    // Orange color used in theme
     const Color orange = Color(0xFFFF9800);
 
     return showDialog<Map<String, String>>(
       context: context,
-      barrierDismissible: true, // allow dismiss by tapping outside
+      barrierDismissible: true,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
@@ -273,11 +297,8 @@ class _MainTabsState extends State<MainTabs> {
               tooltip: 'Schedule',
             ),
 
-            // Sync Now Button with gradient & margin for vertical positioning
             Container(
-              margin: EdgeInsets.only(
-                bottom: 12,
-              ), // lift button above bottom bar edge
+              margin: EdgeInsets.only(bottom: 12),
               width: 160,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(

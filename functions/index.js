@@ -29,14 +29,21 @@ exports.fetchWebFaaSchedule = onCall(
         waitUntil: "networkidle2",
       });
 
-      await Promise.all([
-        page.click("#btnLogin"),
-        page.waitForSelector('input[name="identifier"]', {
-          visible: true,
-          timeout: 40000,
-        }),
+      // Click login button and wait for login input or 403 error
+      await page.click("#btnLogin");
+
+      await Promise.race([
+        page.waitForSelector('input[name="identifier"]', { visible: true, timeout: 40000 }),
+        page.waitForSelector('.widget .error-code', { visible: true, timeout: 5000 }),
       ]);
 
+      const is403Error = await page.$eval('.widget .error-code', el => el.innerText).catch(() => null);
+      if (is403Error === '403') {
+        const errorMessage = await page.$eval('.widget .o-form-title', el => el.innerText).catch(() => 'Access Forbidden');
+        throw new Error(`403 Error: ${errorMessage}`);
+      }
+
+      // Fill username and click Next
       await page.type('input[name="identifier"]', username, { delay: 100 });
       await Promise.all([
         page.click('input[type="submit"][value="Next"]'),
@@ -46,6 +53,7 @@ exports.fetchWebFaaSchedule = onCall(
         }),
       ]);
 
+      // Fill password and click Verify
       await page.type('input[name="credentials.passcode"]', password, {
         delay: 100,
       });
@@ -57,6 +65,13 @@ exports.fetchWebFaaSchedule = onCall(
         }),
       ]);
 
+      // Check for "Unable to sign in" error after Verify
+      const signInError = await page.$eval('.o-form-error-container[role="alert"] p', el => el.innerText).catch(() => null);
+      if (signInError) {
+        throw new Error(`Sign-in Error: ${signInError}`);
+      }
+
+      // Go to schedule page
       await page.goto("https://wmtscheduler.faa.gov/Views/MySchedule", {
         waitUntil: "networkidle2",
       });
