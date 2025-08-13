@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 class MainScreen extends StatefulWidget {
   final List<Map<String, String>> shifts;
-  final String? errorMessage; // Add this param
+  final String? errorMessage;
 
   const MainScreen({Key? key, required this.shifts, this.errorMessage})
     : super(key: key);
@@ -84,30 +84,18 @@ class _MainScreenState extends State<MainScreen> {
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black38,
-                          blurRadius: 4,
-                          offset: Offset(1, 2),
-                        ),
-                      ],
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     _timeString,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w400,
-                    ),
+                    style: const TextStyle(fontSize: 18, color: Colors.white70),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 12),
-
           Expanded(
             child: widget.errorMessage != null
                 ? Center(

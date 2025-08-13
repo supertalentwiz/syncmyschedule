@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'main_screen.dart';
 import 'subscription_screen.dart';
@@ -13,9 +14,9 @@ class MainTabs extends StatefulWidget {
 class _MainTabsState extends State<MainTabs> {
   int _selectedIndex = 0;
   List<Map<String, String>> _shifts = [];
-  String? _errorMessage; // Holds error text to show in schedule screen
-
+  String? _errorMessage;
   bool _showPassword = false;
+  final _storage = const FlutterSecureStorage();
 
   List<Widget> get _pages => [
     MainScreen(shifts: _shifts, errorMessage: _errorMessage),
@@ -27,10 +28,7 @@ class _MainTabsState extends State<MainTabs> {
     required String username,
     required String password,
   }) async {
-    final callable = FirebaseFunctions.instance.httpsCallable(
-      'fetchWebFaaSchedule',
-    );
-
+    final callable = FirebaseFunctions.instance.httpsCallable('fetchFaaShifts');
     try {
       final result = await callable.call(<String, dynamic>{
         'username': username,
@@ -52,8 +50,13 @@ class _MainTabsState extends State<MainTabs> {
         throw Exception('No schedule returned');
       }
     } catch (e) {
-      // Pass the raw error message for display
-      throw Exception(e.toString());
+      String message = 'Failed to fetch schedule';
+      if (e is FirebaseFunctionsException) {
+        message = e.message ?? message;
+      } else {
+        message = e.toString();
+      }
+      throw Exception(message);
     }
   }
 
@@ -61,64 +64,26 @@ class _MainTabsState extends State<MainTabs> {
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          content: Row(
-            children: [
-              SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(),
+            ),
+            const SizedBox(width: 20),
+            const Expanded(
+              child: Text(
+                'Fetching schedule...',
+                style: TextStyle(fontSize: 16),
               ),
-              SizedBox(width: 20),
-              Expanded(
-                child: Text(
-                  'Fetching schedule...',
-                  style: TextStyle(fontSize: 16),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+            ),
+          ],
+        ),
+      ),
     );
-  }
-
-  void _onItemTapped(int index) async {
-    if (index == 1) {
-      final creds = await _showLoginDialog();
-      if (creds == null) return;
-
-      _showLoadingModal();
-
-      try {
-        final fetchedShifts = await fetchScheduleFromFirebase(
-          username: creds['username']!,
-          password: creds['password']!,
-        );
-
-        setState(() {
-          _shifts = fetchedShifts;
-          _errorMessage = null; // clear previous errors on success
-          _selectedIndex = 0; // show schedule screen
-        });
-      } catch (e) {
-        setState(() {
-          _errorMessage = 'Failed to fetch schedule:\n${e.toString()}';
-          _shifts = [];
-          _selectedIndex = 0; // show schedule screen with error
-        });
-      } finally {
-        Navigator.of(context).pop(); // close loading modal
-      }
-    } else {
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
   }
 
   Future<Map<String, String>?> _showLoginDialog() async {
@@ -166,7 +131,7 @@ class _MainTabsState extends State<MainTabs> {
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Enter username' : null,
                     ),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     TextFormField(
                       decoration: InputDecoration(
                         labelText: 'Password',
@@ -188,11 +153,8 @@ class _MainTabsState extends State<MainTabs> {
                                 : Icons.visibility,
                             color: orange,
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _showPassword = !_showPassword;
-                            });
-                          },
+                          onPressed: () =>
+                              setState(() => _showPassword = !_showPassword),
                         ),
                       ),
                       obscureText: !_showPassword,
@@ -208,52 +170,17 @@ class _MainTabsState extends State<MainTabs> {
                   child: Text('Cancel', style: TextStyle(color: orange)),
                   onPressed: () => Navigator.pop(context, null),
                 ),
-                Container(
-                  margin: EdgeInsets.only(bottom: 8, right: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 6,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 24,
-                      ),
-                    ),
-                    child: Text(
-                      'Sync',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        Navigator.pop(context, {
-                          'username': username,
-                          'password': password,
-                        });
-                      }
-                    },
-                  ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
+                      Navigator.pop(context, {
+                        'username': username,
+                        'password': password,
+                      });
+                    }
+                  },
+                  child: const Text('Save'),
                 ),
               ],
             );
@@ -263,13 +190,92 @@ class _MainTabsState extends State<MainTabs> {
     );
   }
 
+  Future<bool> _showConfirmDialog() async {
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('Use saved FAA credentials?'),
+            content: const Text(
+              'You have saved FAA credentials. Continue with them or edit?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Edit credentials'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  void _onItemTapped(int index) async {
+    if (index == 1) {
+      Map<String, String>? creds;
+
+      final savedUsername = await _storage.read(key: 'faa_username');
+      final savedPassword = await _storage.read(key: 'faa_password');
+
+      if (savedUsername != null && savedPassword != null) {
+        final useSaved = await _showConfirmDialog();
+        if (useSaved) {
+          creds = {'username': savedUsername, 'password': savedPassword};
+        } else {
+          creds = await _showLoginDialog();
+          if (creds != null) {
+            await _storage.write(key: 'faa_username', value: creds['username']);
+            await _storage.write(key: 'faa_password', value: creds['password']);
+          }
+        }
+      } else {
+        creds = await _showLoginDialog();
+        if (creds != null) {
+          await _storage.write(key: 'faa_username', value: creds['username']);
+          await _storage.write(key: 'faa_password', value: creds['password']);
+        }
+      }
+
+      if (creds == null) return;
+
+      _showLoadingModal();
+
+      try {
+        final fetchedShifts = await fetchScheduleFromFirebase(
+          username: creds['username']!,
+          password: creds['password']!,
+        );
+
+        setState(() {
+          _shifts = fetchedShifts;
+          _errorMessage = null;
+          _selectedIndex = 0;
+        });
+      } catch (e) {
+        setState(() {
+          _errorMessage = e.toString();
+          _shifts = [];
+          _selectedIndex = 0;
+        });
+      } finally {
+        if (Navigator.canPop(context)) Navigator.pop(context); // close loading
+      }
+    } else {
+      setState(() => _selectedIndex = index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(
         height: 90,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Color(0xFF002B53),
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(40),
@@ -283,7 +289,7 @@ class _MainTabsState extends State<MainTabs> {
             ),
           ],
         ),
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -294,31 +300,14 @@ class _MainTabsState extends State<MainTabs> {
                 color: _selectedIndex == 0 ? Colors.orange : Colors.grey[400],
               ),
               onPressed: () => _onItemTapped(0),
-              tooltip: 'Schedule',
             ),
-
             Container(
-              margin: EdgeInsets.only(bottom: 12),
+              margin: const EdgeInsets.only(bottom: 12),
               width: 160,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
               child: ElevatedButton.icon(
                 onPressed: () => _onItemTapped(1),
-                icon: Icon(Icons.refresh, size: 24, color: Colors.white),
-                label: Text(
+                icon: const Icon(Icons.refresh, size: 24, color: Colors.white),
+                label: const Text(
                   'Sync Now',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
@@ -327,17 +316,14 @@ class _MainTabsState extends State<MainTabs> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: Colors.orange,
                 ),
               ),
             ),
-
             IconButton(
               icon: Icon(
                 Icons.person,
@@ -345,7 +331,6 @@ class _MainTabsState extends State<MainTabs> {
                 color: _selectedIndex == 2 ? Colors.orange : Colors.grey[400],
               ),
               onPressed: () => _onItemTapped(2),
-              tooltip: 'Profile',
             ),
           ],
         ),
