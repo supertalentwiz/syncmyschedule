@@ -14,20 +14,26 @@ class _MainTabsState extends State<MainTabs> {
   int _selectedIndex = 0;
   List<Map<String, String>> _shifts = [];
 
-  List<Widget> get _pages => [
-        MainScreen(shifts: _shifts),
-        SubscriptionScreen(),
-        ProfileScreen(),
-      ];
+  // Password visibility toggle for the dialog
+  bool _showPassword = false;
 
+  List<Widget> get _pages => [
+    MainScreen(shifts: _shifts),
+    SubscriptionScreen(),
+    ProfileScreen(),
+  ];
+
+  // Call the deployed Firebase function
   Future<List<Map<String, String>>> fetchScheduleFromFirebase({
     required String username,
     required String password,
   }) async {
-    final callable = FirebaseFunctions.instance.httpsCallable('fetchFaaSchedule');
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'fetchWebFaaSchedule',
+    );
 
     try {
-      final result = await callable.call({
+      final result = await callable.call(<String, dynamic>{
         'username': username,
         'password': password,
       });
@@ -38,6 +44,7 @@ class _MainTabsState extends State<MainTabs> {
         List scheduleRaw = data['schedule'];
         return scheduleRaw.map<Map<String, String>>((shift) {
           return {
+            'day': shift['day'] ?? '',
             'date': shift['date'] ?? '',
             'code': shift['code'] ?? '',
           };
@@ -50,14 +57,16 @@ class _MainTabsState extends State<MainTabs> {
     }
   }
 
+  // Handler for bottom nav taps and sync button tap
   void _onItemTapped(int index) async {
     if (index == 1) {
+      // Sync button tapped: show credential dialog and fetch schedule
       final creds = await _showLoginDialog();
       if (creds == null) return; // user cancelled
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fetching schedule...')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Fetching schedule...')));
 
       try {
         final fetchedShifts = await fetchScheduleFromFirebase(
@@ -70,21 +79,23 @@ class _MainTabsState extends State<MainTabs> {
           _selectedIndex = 0; // switch to schedule screen
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Schedule fetched!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Schedule fetched!')));
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to fetch schedule: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to fetch schedule: $e')));
       }
     } else {
+      // Just switch tabs normally
       setState(() {
         _selectedIndex = index;
       });
     }
   }
 
+  // Dialog to get username and password with password visibility toggle
   Future<Map<String, String>?> _showLoginDialog() async {
     final _formKey = GlobalKey<FormState>();
     String username = '';
@@ -97,97 +108,132 @@ class _MainTabsState extends State<MainTabs> {
       context: context,
       barrierDismissible: true, // allow dismiss by tapping outside
       builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            'Enter FAA Credentials',
-            style: TextStyle(color: orange, fontWeight: FontWeight.bold),
-          ),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Username or Email',
-                    labelStyle: TextStyle(color: orange),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: orange, width: 2),
-                      borderRadius: BorderRadius.circular(8),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                'Enter FAA Credentials',
+                style: TextStyle(color: orange, fontWeight: FontWeight.bold),
+              ),
+              content: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Username or Email',
+                        labelStyle: TextStyle(color: orange),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: orange, width: 2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: orange.withOpacity(0.5),
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onSaved: (val) => username = val!.trim(),
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Enter username' : null,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: orange.withOpacity(0.5)),
-                      borderRadius: BorderRadius.circular(8),
+                    SizedBox(height: 12),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: TextStyle(color: orange),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: orange, width: 2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: orange.withOpacity(0.5),
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: orange,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showPassword = !_showPassword;
+                            });
+                          },
+                        ),
+                      ),
+                      obscureText: !_showPassword,
+                      onSaved: (val) => password = val!.trim(),
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Enter password' : null,
                     ),
-                  ),
-                  onSaved: (val) => username = val!.trim(),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Enter username' : null,
+                  ],
                 ),
-                SizedBox(height: 12),
-                TextFormField(
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    labelStyle: TextStyle(color: orange),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: orange, width: 2),
-                      borderRadius: BorderRadius.circular(8),
+              ),
+              actions: [
+                TextButton(
+                  child: Text('Cancel', style: TextStyle(color: orange)),
+                  onPressed: () => Navigator.pop(context, null),
+                ),
+                Container(
+                  margin: EdgeInsets.only(bottom: 8, right: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: orange.withOpacity(0.5)),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  obscureText: true,
-                  onSaved: (val) => password = val!.trim(),
-                  validator: (val) =>
-                      val == null || val.isEmpty ? 'Enter password' : null,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 24,
+                      ),
+                    ),
+                    child: Text(
+                      'Sync',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        _formKey.currentState!.save();
+                        Navigator.pop(context, {
+                          'username': username,
+                          'password': password,
+                        });
+                      }
+                    },
+                  ),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: Text('Cancel', style: TextStyle(color: orange)),
-              onPressed: () => Navigator.pop(context, null),
-            ),
-            Container(
-              margin: EdgeInsets.only(bottom: 8, right: 8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 6,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-                ),
-                child: Text('Sync', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    _formKey.currentState!.save();
-                    Navigator.pop(context, {'username': username, 'password': password});
-                  }
-                },
-              ),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -229,7 +275,9 @@ class _MainTabsState extends State<MainTabs> {
 
             // Sync Now Button with gradient & margin for vertical positioning
             Container(
-              margin: EdgeInsets.only(bottom: 12), // lift button above bottom bar edge
+              margin: EdgeInsets.only(
+                bottom: 12,
+              ), // lift button above bottom bar edge
               width: 160,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
