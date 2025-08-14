@@ -2,6 +2,67 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
 
+/// Mapping of shift/leave codes to emojis
+const Map<String, String> shiftEmojiLegend = {
+  r'$': '💰',
+  '^': '🕑',
+  '!': '⏱️',
+  'A': '🏖️',
+  'ADMIN': '📝',
+  'AWOL': '🚫',
+  'AWS': '⏰',
+  'TRNG': '🎓',
+  'BL': '🩸',
+  'CL': '⚖️',
+  'COS': '✈️',
+  'CTU': '⏳',
+  'XTU': '⏳',
+  'FL': '⚰️',
+  'FRLO': '🛑',
+  'FSL': '🤒',
+  'HL': '🎉',
+  'JURY': '👩‍⚖️',
+  'LWOP': '🚷',
+  'MIL': '🎖️',
+  'SL': '🤒',
+  'TOA': '⏲️',
+  'WX': '🌩️',
+  'X': '❌',
+};
+
+/// Formats a shift code string like "11AWS" or "630$" into "11AWS (⏰)" or "630💰"
+String formatShiftWithEmoji(String code) {
+  // Split by space/comma to handle multiple codes
+  final parts = code.split(RegExp(r'[\s,]'));
+  final formattedParts = parts.map((part) {
+    // Allow digits + letters in the main code, keep $, !, ^ as symbols
+    final symbolMatch = RegExp(r'([0-9A-Z]+)([\$\!\^]*)').firstMatch(part);
+    if (symbolMatch != null) {
+      final mainCode = symbolMatch.group(1)!;
+      final symbols = symbolMatch.group(2)!;
+
+      // Remove numbers for emoji lookup
+      final codeWithoutNumbers = mainCode.replaceAll(RegExp(r'\d'), '');
+      final mainEmoji = shiftEmojiLegend[codeWithoutNumbers];
+
+      // Convert each symbol to its emoji if exists
+      final symbolsEmoji = symbols
+          .split('')
+          .map((s) => shiftEmojiLegend[s] ?? s)
+          .join();
+
+      if (mainEmoji != null && codeWithoutNumbers.isNotEmpty) {
+        return '$mainCode ($mainEmoji)$symbolsEmoji';
+      } else {
+        return '$mainCode$symbolsEmoji';
+      }
+    }
+    return part;
+  }).toList();
+
+  return formattedParts.join(' ');
+}
+
 class MainScreen extends StatefulWidget {
   final List<Map<String, String>> shifts;
   final String? errorMessage;
@@ -103,9 +164,9 @@ class _MainScreenState extends State<MainScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
                         widget.errorMessage!,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
-                          color: Colors.red[700],
+                          color: Colors.orange,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
@@ -128,20 +189,37 @@ class _MainScreenState extends State<MainScreen> {
                           itemCount: widget.shifts.length,
                           itemBuilder: (context, index) {
                             final shift = widget.shifts[index];
+                            final formattedCode = formatShiftWithEmoji(
+                              shift['code'] ?? '',
+                            );
                             return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              child: ListTile(
-                                leading: const Icon(
-                                  Icons.event_note,
-                                  color: Colors.orange,
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
                                 ),
-                                title: Text(
-                                  'Shift Code: ${shift['code']}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      formattedCode,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    Text(
+                                      shift['date'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.black54,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                subtitle: Text('Date: ${shift['date']}'),
                               ),
                             );
                           },
