@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'main_screen.dart';
 import 'subscription_screen.dart';
 import 'profile_screen.dart';
+import '../widgets/terms_of_use_dialog.dart';
 
 class MainTabs extends StatefulWidget {
   @override
@@ -21,10 +23,37 @@ class _MainTabsState extends State<MainTabs> {
   static const Color orange = Color(0xFFFF9800);
 
   List<Widget> get _pages => [
-        MainScreen(shifts: _shifts, errorMessage: _errorMessage),
-        SubscriptionScreen(),
-        ProfileScreen(),
-      ];
+    MainScreen(shifts: _shifts, errorMessage: _errorMessage),
+    SubscriptionScreen(),
+    ProfileScreen(),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndShowTerms(); // <<< show Terms only on first run after login
+  }
+
+  /// Shows Terms of Use once, then remembers acceptance.
+  Future<void> _checkAndShowTerms() async {
+    final prefs = await SharedPreferences.getInstance();
+    final accepted = prefs.getBool('termsAccepted') ?? false;
+
+    if (!accepted) {
+      // Post-frame so it doesn't conflict with initial build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => TermsOfUseDialog(
+            onAccept: () async {
+              await prefs.setBool('termsAccepted', true);
+            },
+          ),
+        );
+      });
+    }
+  }
 
   Future<List<Map<String, String>>> fetchScheduleFromFirebase({
     required String username,
@@ -94,7 +123,6 @@ class _MainTabsState extends State<MainTabs> {
     final _formKey = GlobalKey<FormState>();
     String username = '';
     String password = '';
-
     return showDialog<Map<String, String>>(
       context: context,
       barrierDismissible: true,
@@ -107,9 +135,7 @@ class _MainTabsState extends State<MainTabs> {
               ),
               title: const Text(
                 'Enter FAA Credentials',
-                style: TextStyle(
-                  color: Color(0xFF002B53),
-                ),
+                style: TextStyle(color: Color(0xFF002B53)),
               ),
               content: Form(
                 key: _formKey,
@@ -132,7 +158,7 @@ class _MainTabsState extends State<MainTabs> {
                         ),
                       ),
                       onSaved: (val) => username = val!.trim(),
-                      style: TextStyle(color: orange),
+                      style: const TextStyle(color: orange),
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Enter username' : null,
                     ),
@@ -164,7 +190,7 @@ class _MainTabsState extends State<MainTabs> {
                       ),
                       obscureText: !_showPassword,
                       onSaved: (val) => password = val!.trim(),
-                      style: TextStyle(color: orange),
+                      style: const TextStyle(color: orange),
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Enter password' : null,
                     ),
@@ -177,9 +203,7 @@ class _MainTabsState extends State<MainTabs> {
                   onPressed: () => Navigator.pop(context, null),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: orange,
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: orange),
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
@@ -189,7 +213,10 @@ class _MainTabsState extends State<MainTabs> {
                       });
                     }
                   },
-                  child: const Text('Sync', style: TextStyle(color: Colors.white),),
+                  child: const Text(
+                    'Sync',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -209,9 +236,7 @@ class _MainTabsState extends State<MainTabs> {
             ),
             title: const Text(
               'Use saved FAA credentials?',
-              style: TextStyle(
-                color: Color(0xFF002B53),
-              ),
+              style: TextStyle(color: Color(0xFF002B53)),
             ),
             content: const Text(
               'You have saved FAA credentials. Continue with them or edit?',
@@ -220,7 +245,10 @@ class _MainTabsState extends State<MainTabs> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Edit credentials', style: TextStyle(color: orange)),
+                child: const Text(
+                  'Edit credentials',
+                  style: TextStyle(color: orange),
+                ),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: orange),
@@ -235,6 +263,23 @@ class _MainTabsState extends State<MainTabs> {
 
   void _onItemTapped(int index) async {
     if (index == 1) {
+      // Optional guard: ensure Terms accepted before allowing sync.
+      final prefs = await SharedPreferences.getInstance();
+      final accepted = prefs.getBool('termsAccepted') ?? false;
+      if (!accepted) {
+        // If somehow not accepted (e.g., user dismissed dialog via system), show it again.
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => TermsOfUseDialog(
+            onAccept: () async {
+              await prefs.setBool('termsAccepted', true);
+            },
+          ),
+        );
+        return;
+      }
+
       Map<String, String>? creds;
 
       final savedUsername = await _storage.read(key: 'faa_username');
