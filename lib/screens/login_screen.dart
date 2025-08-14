@@ -86,15 +86,15 @@ class _LoginScreenState extends State<LoginScreen> {
       filled: true,
       fillColor: Colors.grey[200],
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(25),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(25),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(25),
         borderSide: BorderSide(color: Colors.orange, width: 2),
       ),
     );
@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
               height: 350,
               decoration: BoxDecoration(
                 color: Color(0xFF002B53),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -193,12 +193,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _loading ? null : _signIn,
                       child: Text(
                         _loading ? 'Signing in...' : 'Sign In',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF002B53),
                         padding: EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                       ),
                     ),
                   ),

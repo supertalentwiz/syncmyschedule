@@ -18,11 +18,13 @@ class _MainTabsState extends State<MainTabs> {
   bool _showPassword = false;
   final _storage = const FlutterSecureStorage();
 
+  static const Color orange = Color(0xFFFF9800);
+
   List<Widget> get _pages => [
-    MainScreen(shifts: _shifts, errorMessage: _errorMessage),
-    SubscriptionScreen(),
-    ProfileScreen(),
-  ];
+        MainScreen(shifts: _shifts, errorMessage: _errorMessage),
+        SubscriptionScreen(),
+        ProfileScreen(),
+      ];
 
   Future<List<Map<String, String>>> fetchScheduleFromFirebase({
     required String username,
@@ -67,17 +69,19 @@ class _MainTabsState extends State<MainTabs> {
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Row(
-          children: [
-            const SizedBox(
+          children: const [
+            SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: orange, // Spinner is orange
+              ),
             ),
-            const SizedBox(width: 20),
-            const Expanded(
+            SizedBox(width: 20),
+            Expanded(
               child: Text(
                 'Fetching schedule...',
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: 16, color: orange),
               ),
             ),
           ],
@@ -91,8 +95,6 @@ class _MainTabsState extends State<MainTabs> {
     String username = '';
     String password = '';
 
-    const Color orange = Color(0xFFFF9800);
-
     return showDialog<Map<String, String>>(
       context: context,
       barrierDismissible: true,
@@ -103,9 +105,11 @@ class _MainTabsState extends State<MainTabs> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: Text(
+              title: const Text(
                 'Enter FAA Credentials',
-                style: TextStyle(color: orange, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Color(0xFF002B53),
+                ),
               ),
               content: Form(
                 key: _formKey,
@@ -115,9 +119,9 @@ class _MainTabsState extends State<MainTabs> {
                     TextFormField(
                       decoration: InputDecoration(
                         labelText: 'Username or Email',
-                        labelStyle: TextStyle(color: orange),
+                        labelStyle: const TextStyle(color: orange),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: orange, width: 2),
+                          borderSide: const BorderSide(color: orange, width: 2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         enabledBorder: OutlineInputBorder(
@@ -128,6 +132,7 @@ class _MainTabsState extends State<MainTabs> {
                         ),
                       ),
                       onSaved: (val) => username = val!.trim(),
+                      style: TextStyle(color: orange),
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Enter username' : null,
                     ),
@@ -135,9 +140,9 @@ class _MainTabsState extends State<MainTabs> {
                     TextFormField(
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        labelStyle: TextStyle(color: orange),
+                        labelStyle: const TextStyle(color: orange),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: orange, width: 2),
+                          borderSide: const BorderSide(color: orange, width: 2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         enabledBorder: OutlineInputBorder(
@@ -159,6 +164,7 @@ class _MainTabsState extends State<MainTabs> {
                       ),
                       obscureText: !_showPassword,
                       onSaved: (val) => password = val!.trim(),
+                      style: TextStyle(color: orange),
                       validator: (val) =>
                           val == null || val.isEmpty ? 'Enter password' : null,
                     ),
@@ -167,10 +173,13 @@ class _MainTabsState extends State<MainTabs> {
               ),
               actions: [
                 TextButton(
-                  child: Text('Cancel', style: TextStyle(color: orange)),
+                  child: const Text('Cancel', style: TextStyle(color: orange)),
                   onPressed: () => Navigator.pop(context, null),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: orange,
+                  ),
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
@@ -180,7 +189,7 @@ class _MainTabsState extends State<MainTabs> {
                       });
                     }
                   },
-                  child: const Text('Save'),
+                  child: const Text('Sync', style: TextStyle(color: Colors.white),),
                 ),
               ],
             );
@@ -193,20 +202,30 @@ class _MainTabsState extends State<MainTabs> {
   Future<bool> _showConfirmDialog() async {
     return await showDialog<bool>(
           context: context,
-          barrierDismissible: false,
+          barrierDismissible: true,
           builder: (context) => AlertDialog(
-            title: const Text('Use saved FAA credentials?'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              'Use saved FAA credentials?',
+              style: TextStyle(
+                color: Color(0xFF002B53),
+              ),
+            ),
             content: const Text(
               'You have saved FAA credentials. Continue with them or edit?',
+              style: TextStyle(color: orange),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Edit credentials'),
+                child: const Text('Edit credentials', style: TextStyle(color: orange)),
               ),
               ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: orange),
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('OK'),
+                child: const Text('OK', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
@@ -297,7 +316,7 @@ class _MainTabsState extends State<MainTabs> {
               icon: Icon(
                 Icons.home,
                 size: 32,
-                color: _selectedIndex == 0 ? Colors.orange : Colors.grey[400],
+                color: _selectedIndex == 0 ? orange : Colors.grey[400],
               ),
               onPressed: () => _onItemTapped(0),
             ),
@@ -320,7 +339,7 @@ class _MainTabsState extends State<MainTabs> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Colors.orange,
+                  backgroundColor: orange,
                 ),
               ),
             ),
@@ -328,7 +347,7 @@ class _MainTabsState extends State<MainTabs> {
               icon: Icon(
                 Icons.person,
                 size: 32,
-                color: _selectedIndex == 2 ? Colors.orange : Colors.grey[400],
+                color: _selectedIndex == 2 ? orange : Colors.grey[400],
               ),
               onPressed: () => _onItemTapped(2),
             ),

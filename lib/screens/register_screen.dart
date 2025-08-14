@@ -80,15 +80,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       filled: true,
       fillColor: Colors.grey[200],
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(25),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(25),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(25),
         borderSide: BorderSide(color: Colors.orange, width: 2),
       ),
     );
@@ -122,7 +122,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               height: 200,
               decoration: BoxDecoration(
                 color: Color(0xFF002B53),
-                borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -189,12 +189,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: _loading ? null : _register,
                       child: Text(
                         _loading ? 'Signing up...' : 'Sign Up',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF002B53),
                         padding: EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
                       ),
                     ),
                   ),
