@@ -13,17 +13,21 @@ class ShiftToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final allFutureShiftsChecked = scheduleProvider.shifts
-        .asMap()
-        .entries
-        .where(
-          (entry) =>
-              DateFormat('MM/dd/yyyy').parse(entry.value.date).isAfter(now),
-        )
-        .every(
-          (entry) =>
-              scheduleProvider.shiftCheckedStates[entry.value.date] ?? false,
-        );
+    final hasShifts = scheduleProvider.shifts.isNotEmpty;
+    final allFutureShiftsChecked =
+        hasShifts &&
+        scheduleProvider.shifts
+            .asMap()
+            .entries
+            .where(
+              (entry) =>
+                  DateFormat('MM/dd/yyyy').parse(entry.value.date).isAfter(now),
+            )
+            .every(
+              (entry) =>
+                  scheduleProvider.shiftCheckedStates[entry.value.date] ??
+                  false,
+            );
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -34,9 +38,11 @@ class ShiftToolbar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           ElevatedButton(
-            onPressed: () {
-              scheduleProvider.toggleAllShiftsChecked();
-            },
+            onPressed: hasShifts
+                ? () {
+                    scheduleProvider.toggleAllShiftsChecked();
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
               foregroundColor: AppColors.background,
@@ -51,20 +57,22 @@ class ShiftToolbar extends StatelessWidget {
             child: Text(
               allFutureShiftsChecked ? 'Unselect All' : 'Select All',
               style: const TextStyle(
-                fontSize: AppSizes.buttonFontSize * 0.8, // Reduced font size
+                fontSize: AppSizes.buttonFontSize * 0.8,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
           ElevatedButton(
-            onPressed: () async {
-              final message = await scheduleProvider.syncToCalendar();
-              if (context.mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(message)));
-              }
-            },
+            onPressed: hasShifts
+                ? () async {
+                    final message = await scheduleProvider.syncToCalendar();
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(message)));
+                    }
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
               foregroundColor: AppColors.background,
@@ -79,7 +87,7 @@ class ShiftToolbar extends StatelessWidget {
             child: const Text(
               'Sync to Calendar',
               style: TextStyle(
-                fontSize: AppSizes.buttonFontSize * 0.8, // Reduced font size
+                fontSize: AppSizes.buttonFontSize * 0.8,
                 fontWeight: FontWeight.bold,
               ),
             ),
