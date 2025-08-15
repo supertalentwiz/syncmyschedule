@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:syncmyschedule/constants/app_colors.dart';
-import 'package:syncmyschedule/constants/app_sizes.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_sizes.dart';
 import '../constants/app_strings.dart';
 import '../providers/schedule_provider.dart';
 import '../screens/main_screen.dart';
@@ -26,6 +26,11 @@ class _MainTabsState extends State<MainTabs> {
   @override
   void initState() {
     super.initState();
+    final scheduleProvider = Provider.of<ScheduleProvider>(
+      context,
+      listen: false,
+    );
+    scheduleProvider.loadCalendarType();
     _checkAndShowTerms();
   }
 
@@ -35,7 +40,6 @@ class _MainTabsState extends State<MainTabs> {
       listen: false,
     );
     final accepted = await scheduleProvider.checkTermsAccepted();
-    print(accepted);
     if (!accepted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(

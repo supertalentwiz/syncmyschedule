@@ -6,12 +6,14 @@ class InfoCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final VoidCallback? onTap;
 
   const InfoCard({
     super.key,
     required this.icon,
     required this.label,
     required this.value,
+    this.onTap,
   });
 
   @override
@@ -43,6 +45,11 @@ class InfoCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (onTap != null)
+              IconButton(
+                icon: Icon(Icons.arrow_forward, color: AppColors.accent),
+                onPressed: onTap,
+              ),
           ],
         ),
       ),

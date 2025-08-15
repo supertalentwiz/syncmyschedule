@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:syncmyschedule/widgets/common/custom_app_bar.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_sizes.dart';
 import '../providers/profile_provider.dart';
+import '../providers/schedule_provider.dart';
 import '../screens/edit_profile_screen.dart';
-import '../widgets/profile/profile_avatar.dart';
+import '../widgets/common/calendar_selection_dialog.dart';
 import '../widgets/profile/info_card.dart';
+import '../widgets/profile/profile_avatar.dart';
 import '../widgets/profile/gradient_button.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -16,9 +17,14 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profile = Provider.of<ProfileProvider>(context).profile;
+    final scheduleProvider = Provider.of<ScheduleProvider>(context);
 
     return Scaffold(
-      appBar: CustomAppBar(title: AppStrings.profile),
+      appBar: AppBar(
+        title: const Text(AppStrings.profile),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.background,
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -51,18 +57,28 @@ class ProfileScreen extends StatelessWidget {
                 label: AppStrings.schedulerId,
                 value: profile.schedulerId,
               ),
+              const SizedBox(height: AppSizes.cardSpacing),
+              InfoCard(
+                icon: Icons.calendar_today,
+                label: AppStrings.calendarType,
+                value: scheduleProvider.calendarType,
+                onTap: () => showDialog(
+                  context: context,
+                  builder: (_) => CalendarSelectionDialog(
+                    scheduleProvider: scheduleProvider,
+                  ),
+                ),
+              ),
               const Spacer(),
               GradientButton(
                 label: AppStrings.editProfile,
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          EditProfileScreen(initialData: profile.toMap()),
-                    ),
-                  );
-                },
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        EditProfileScreen(initialData: profile.toMap()),
+                  ),
+                ),
               ),
             ],
           ),
