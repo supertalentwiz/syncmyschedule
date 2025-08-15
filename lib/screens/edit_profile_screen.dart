@@ -1,121 +1,109 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_sizes.dart';
+import '../models/profile_model.dart';
+import '../providers/profile_provider.dart';
+import '../widgets/auth/custom_text_field.dart';
+import '../widgets/profile/gradient_button.dart';
+import '../widgets/common/error_dialog.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final Map<String, String> initialData;
 
-  const EditProfileScreen({Key? key, required this.initialData}) : super(key: key);
+  const EditProfileScreen({super.key, required this.initialData});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
-  late TextEditingController _phoneController;
-  late TextEditingController _usernameController;
-  late TextEditingController _emailController;
-  late TextEditingController _schedulerIdController;
-
-  bool _loading = false;
-
-  final _orangeColor = const Color(0xFFFF9800);
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _schedulerIdController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _phoneController = TextEditingController(text: widget.initialData['phone']);
-    _usernameController = TextEditingController(text: widget.initialData['username']);
-    _emailController = TextEditingController(text: widget.initialData['email']);
-    _schedulerIdController = TextEditingController(text: widget.initialData['schedulerId']);
+    _usernameController.text = widget.initialData['username'] ?? '';
+    _emailController.text = widget.initialData['email'] ?? '';
+    _phoneController.text = widget.initialData['phone'] ?? '';
+    _schedulerIdController.text = widget.initialData['schedulerId'] ?? '';
   }
 
-  @override
-  void dispose() {
-    _phoneController.dispose();
-    _usernameController.dispose();
-    _emailController.dispose();
-    _schedulerIdController.dispose();
-    super.dispose();
+  Future<void> _saveProfile() async {
+    final profile = ProfileModel(
+      username: _usernameController.text.trim(),
+      email: _emailController.text.trim(),
+      phone: _phoneController.text.trim(),
+      schedulerId: _schedulerIdController.text.trim(),
+    );
+
+    if (profile.username.isEmpty || profile.email.isEmpty) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (_) =>
+              const ErrorDialog(message: 'Username and email are required.'),
+        );
+      }
+      return;
+    }
+
+    final profileProvider = Provider.of<ProfileProvider>(
+      context,
+      listen: false,
+    );
+    await profileProvider.updateProfile(profile);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
-
-  void _saveChanges() async {
-    setState(() => _loading = true);
-
-    // Simulate save delay (replace with actual save logic e.g. Firebase)
-    await Future.delayed(const Duration(seconds: 1));
-
-    setState(() => _loading = false);
-
-    // Return to ProfileScreen
-    Navigator.pop(context);
-  }
-
-  InputDecoration _inputDecoration(String label) => InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: _orangeColor),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: _orangeColor, width: 2),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        filled: true,
-        fillColor: Colors.grey[200],
-      );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
-        backgroundColor: const Color(0xFF002B53),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.background,
       ),
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Column(
-          children: [
-            TextField(
-              controller: _phoneController,
-              decoration: _inputDecoration('Phone'),
-              keyboardType: TextInputType.phone,
-              style: TextStyle(color: _orangeColor),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _usernameController,
-              decoration: _inputDecoration('Username'),
-              style: TextStyle(color: _orangeColor),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _emailController,
-              decoration: _inputDecoration('Email'),
-              keyboardType: TextInputType.emailAddress,
-              style: TextStyle(color: _orangeColor),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _schedulerIdController,
-              decoration: _inputDecoration('Scheduler ID'),
-              style: TextStyle(color: _orangeColor),
-            ),
-            const SizedBox(height: 30),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _saveChanges,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                child: Text(_loading ? 'Saving...' : 'Save'),
+      body: Padding(
+        padding: const EdgeInsets.all(AppSizes.padding),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              CustomTextField(
+                controller: _usernameController,
+                label: 'Username',
+                hint: 'Enter your username',
               ),
-            ),
-          ],
+              const SizedBox(height: AppSizes.spacingSmall),
+              CustomTextField(
+                controller: _emailController,
+                label: AppStrings.email,
+                hint: 'Enter your email',
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: AppSizes.spacingSmall),
+              CustomTextField(
+                controller: _phoneController,
+                label: AppStrings.phone,
+                hint: 'Enter your phone number',
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: AppSizes.spacingSmall),
+              CustomTextField(
+                controller: _schedulerIdController,
+                label: AppStrings.schedulerId,
+                hint: 'Enter your scheduler ID',
+              ),
+              const SizedBox(height: AppSizes.spacingLarge),
+              GradientButton(label: 'Save Profile', onPressed: _saveProfile),
+            ],
+          ),
         ),
       ),
     );

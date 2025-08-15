@@ -1,85 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_sizes.dart';
+import '../providers/subscription_provider.dart';
+import '../widgets/profile/gradient_button.dart';
+import '../widgets/profile/subscription_card.dart';
 
-class SubscriptionScreen extends StatefulWidget {
-  @override
-  State<SubscriptionScreen> createState() => _SubscriptionScreenState();
-}
-
-class _SubscriptionScreenState extends State<SubscriptionScreen> {
-  int _selectedPlan = -1;
-
-  final List<String> plans = [
-  '1 Month / \$14.99',
-  '3 Months / \$29.99',
-  '6 Months / \$49.99',
-];
-
-  void _selectPlan(int index) {
-    setState(() {
-      _selectedPlan = index;
-    });
-  }
-
-  void _subscribe() {
-    if (_selectedPlan == -1) return;
-    // Implement subscription logic here
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Subscribed to ${plans[_selectedPlan]}')),
-    );
-  }
+class SubscriptionScreen extends StatelessWidget {
+  const SubscriptionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final subscriptionProvider = Provider.of<SubscriptionProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Subscription'),
-        backgroundColor: Color(0xFF002B53),
+        title: const Text(AppStrings.subscription),
+        backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSizes.padding),
         child: Column(
           children: [
-            Text('Choose your subscription plan:', style: TextStyle(fontSize: 18)),
-            SizedBox(height: 20),
-            ...List.generate(plans.length, (index) {
-              final selected = _selectedPlan == index;
-              return GestureDetector(
-                onTap: () => _selectPlan(index),
-                child: Container(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: selected ? Colors.orange : Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: selected ? Colors.orange : Colors.transparent),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                          color: selected ? Colors.white : Colors.grey),
-                      SizedBox(width: 12),
-                      Text(
-                        plans[index],
-                        style: TextStyle(
-                            color: selected ? Colors.white : Colors.black,
-                            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 16),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-            SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _selectedPlan == -1 ? null : _subscribe,
-              child: Text('Subscribe'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                padding: EdgeInsets.symmetric(vertical: 14, horizontal: 60),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            Text(
+              AppStrings.choosePlan,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: AppSizes.spacingLarge),
+            ...List.generate(
+              subscriptionProvider.plans.length,
+              (index) => SubscriptionCard(
+                plan: subscriptionProvider.plans[index],
+                isSelected: subscriptionProvider.selectedPlan == index,
+                onTap: () => subscriptionProvider.selectPlan(index),
               ),
-            )
+            ),
+            const SizedBox(height: AppSizes.spacingLarge * 1.5),
+            GradientButton(
+              label: AppStrings.subscribeButton,
+              onPressed: subscriptionProvider.selectedPlan == -1
+                  ? null
+                  : () async {
+                      final message = await subscriptionProvider.subscribe();
+                      if (message != null && context.mounted) {
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text(message)));
+                      }
+                    },
+            ),
           ],
         ),
       ),

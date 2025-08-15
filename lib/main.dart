@@ -1,39 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'constants/app_strings.dart';
+import 'constants/app_theme.dart';
+import 'constants/app_colors.dart';
+import 'providers/auth_provider.dart';
+import 'providers/profile_provider.dart';
+import 'providers/schedule_provider.dart';
+import 'providers/subscription_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/main_tabs.dart';
 import 'screens/profile_screen.dart';
 import 'screens/subscription_screen.dart';
-import 'screens/main_tabs.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(SyncMyScheduleApp());
+
+  SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle.light.copyWith(
+      statusBarColor: AppColors.primary,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+    ),
+  );
+
+  runApp(const SyncMyScheduleApp());
 }
 
 class SyncMyScheduleApp extends StatelessWidget {
+  const SyncMyScheduleApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'SyncMySchedule',
-      theme: ThemeData(
-        primaryColor: Color(0xFF002B53),
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          secondary: Colors.orange,
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => ScheduleProvider()),
+        ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
+      ],
+      child: MaterialApp(
+        title: AppStrings.appName,
+        theme: AppTheme.theme,
+        initialRoute: '/login',
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/register': (context) => const RegisterScreen(),
+          '/main': (context) => const MainTabs(),
+          '/profile': (context) => const ProfileScreen(),
+          '/subscription': (context) => const SubscriptionScreen(),
+        },
       ),
-      initialRoute: '/login',
-      routes: {
-        '/login': (context) => LoginScreen(),
-        '/register': (context) => RegisterScreen(),
-        '/main': (context) => MainTabs(),
-        '/profile': (context) => ProfileScreen(),
-        '/subscription': (context) => SubscriptionScreen(),
-      },
     );
   }
 }

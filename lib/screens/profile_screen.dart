@@ -1,213 +1,76 @@
 import 'package:flutter/material.dart';
-import 'edit_profile_screen.dart';
+import 'package:provider/provider.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../constants/app_sizes.dart';
+import '../providers/profile_provider.dart';
+import '../screens/edit_profile_screen.dart';
+import '../widgets/profile/profile_avatar.dart';
+import '../widgets/profile/info_card.dart';
+import '../widgets/profile/gradient_button.dart';
 
 class ProfileScreen extends StatelessWidget {
-  final Map<String, String> profileData = {
-    'phone': '+1 555 123 4567',
-    'username': 'MykytaS',
-    'email': 'mykyta@example.com',
-    'schedulerId': 'user282811',
-  };
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
+    final profile = Provider.of<ProfileProvider>(context).profile;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: const Color(0xFF002B53),
-        foregroundColor: Colors.white,
+        title: const Text(AppStrings.profile),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.background,
         elevation: 2,
       ),
-      backgroundColor: Colors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.padding,
+            vertical: AppSizes.spacingLarge,
+          ),
           child: Column(
             children: [
-              // Avatar
-              CircleAvatar(
-                radius: 54,
-                backgroundColor: orange.withOpacity(0.2),
-                child: Text(
-                  profileData['username'] != null && profileData['username']!.isNotEmpty
-                      ? profileData['username']![0].toUpperCase()
-                      : '?',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: orange,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Username
+              ProfileAvatar(username: profile.username),
+              const SizedBox(height: AppSizes.spacingSmall),
               Text(
-                profileData['username'] ?? '',
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+                profile.username,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 8),
-
-              // Email & Phone cards
-              _InfoCard(
+              const SizedBox(height: AppSizes.cardSpacing),
+              InfoCard(
                 icon: Icons.email_outlined,
-                label: 'Email',
-                value: profileData['email'] ?? '',
+                label: AppStrings.email,
+                value: profile.email,
               ),
-              const SizedBox(height: 12),
-              _InfoCard(
+              const SizedBox(height: AppSizes.cardSpacing),
+              InfoCard(
                 icon: Icons.phone_outlined,
-                label: 'Phone',
-                value: profileData['phone'] ?? '',
+                label: AppStrings.phone,
+                value: profile.phone,
               ),
-              const SizedBox(height: 12),
-
-              // Scheduler ID smaller card
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Scheduler ID: ',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: orange,
-                          fontSize: 16,
-                        ),
-                      ),
-                      TextSpan(
-                        text: profileData['schedulerId'] ?? '',
-                        style: const TextStyle(fontSize: 16, color: Colors.black87),
-                      ),
-                    ],
-                  ),
-                ),
+              const SizedBox(height: AppSizes.cardSpacing),
+              InfoCard(
+                icon: Icons.perm_identity,
+                label: AppStrings.schedulerId,
+                value: profile.schedulerId,
               ),
-
               const Spacer(),
-
-              // Updated Edit Profile button with gradient and shadow
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 8,
-                      offset: Offset(0, 4),
+              GradientButton(
+                label: AppStrings.editProfile,
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          EditProfileScreen(initialData: profile.toMap()),
                     ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EditProfileScreen(initialData: profileData),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Edit Profile',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
+                  );
+                },
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _InfoCard({
-    Key? key,
-    required this.icon,
-    required this.label,
-    required this.value,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final orange = const Color(0xFFFF9800);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: orange, size: 28),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: orange,
-                      fontSize: 14,
-                    )),
-                const SizedBox(height: 4),
-                Text(value,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    )),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

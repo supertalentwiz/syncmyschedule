@@ -1,4 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.syncmyschedule">
+    <!-- Calendar permissions -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+
+    <!-- Optional: Needed for Android 11+ to query calendar providers -->
+    <queries>
+        <provider android:authorities="com.android.calendar" />
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
     <application
         android:label="syncmyschedule"
         android:name="${applicationName}"

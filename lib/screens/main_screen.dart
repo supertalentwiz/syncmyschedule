@@ -1,82 +1,24 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
-/// Mapping of shift/leave codes to emojis
-const Map<String, String> shiftEmojiLegend = {
-  r'$': '💰',
-  '^': '🕑',
-  '!': '⏱️',
-  'A': '🏖️',
-  'ADMIN': '📝',
-  'AWOL': '🚫',
-  'AWS': '⏰',
-  'TRNG': '🎓',
-  'BL': '🩸',
-  'CL': '⚖️',
-  'COS': '✈️',
-  'CTU': '⏳',
-  'XTU': '⏳',
-  'FL': '⚰️',
-  'FRLO': '🛑',
-  'FSL': '🤒',
-  'HL': '🎉',
-  'JURY': '👩‍⚖️',
-  'LWOP': '🚷',
-  'MIL': '🎖️',
-  'SL': '🤒',
-  'TOA': '⏲️',
-  'WX': '🌩️',
-  'X': '❌',
-};
-
-/// Formats a shift code string like "11AWS" or "630$" into "11AWS (⏰)" or "630💰"
-String formatShiftWithEmoji(String code) {
-  // Split by space/comma to handle multiple codes
-  final parts = code.split(RegExp(r'[\s,]'));
-  final formattedParts = parts.map((part) {
-    // Allow digits + letters in the main code, keep $, !, ^ as symbols
-    final symbolMatch = RegExp(r'([0-9A-Z]+)([\$\!\^]*)').firstMatch(part);
-    if (symbolMatch != null) {
-      final mainCode = symbolMatch.group(1)!;
-      final symbols = symbolMatch.group(2)!;
-
-      // Remove numbers for emoji lookup
-      final codeWithoutNumbers = mainCode.replaceAll(RegExp(r'\d'), '');
-      final mainEmoji = shiftEmojiLegend[codeWithoutNumbers];
-
-      // Convert each symbol to its emoji if exists
-      final symbolsEmoji = symbols
-          .split('')
-          .map((s) => shiftEmojiLegend[s] ?? s)
-          .join();
-
-      if (mainEmoji != null && codeWithoutNumbers.isNotEmpty) {
-        return '$mainCode ($mainEmoji)$symbolsEmoji';
-      } else {
-        return '$mainCode$symbolsEmoji';
-      }
-    }
-    return part;
-  }).toList();
-
-  return formattedParts.join(' ');
-}
+import 'package:provider/provider.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
+import '../providers/schedule_provider.dart';
+import '../widgets/schedule/date_time_card.dart';
+import '../widgets/schedule/shift_card.dart';
+import '../widgets/schedule/shift_toolbar.dart';
 
 class MainScreen extends StatefulWidget {
-  final List<Map<String, String>> shifts;
-  final String? errorMessage;
-
-  const MainScreen({Key? key, required this.shifts, this.errorMessage})
-    : super(key: key);
+  const MainScreen({super.key});
 
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  late String _timeString;
   late String _dateString;
+  late String _timeString;
   late Timer _timer;
 
   @override
@@ -84,7 +26,7 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _updateDateTime();
     _timer = Timer.periodic(
-      const Duration(seconds: 1),
+      const Duration(minutes: 1),
       (_) => _updateDateTime(),
     );
   }
@@ -105,125 +47,75 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheduleProvider = Provider.of<ScheduleProvider>(context);
+    final now = DateTime.now();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Schedule'),
-        backgroundColor: const Color(0xFF002B53),
-        foregroundColor: Colors.white,
+        title: const Text(AppStrings.mySchedule),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.background,
       ),
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.background,
       body: Column(
         children: [
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFFF9800), Color(0xFFFFC107)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.all(Radius.circular(25)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              constraints: const BoxConstraints(minHeight: 120),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _dateString,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _timeString,
-                    style: const TextStyle(fontSize: 18, color: Colors.white70),
-                  ),
-                ],
-              ),
-            ),
+            child: DateTimeCard(date: _dateString, time: _timeString),
           ),
           const SizedBox(height: 12),
+          ShiftToolbar(scheduleProvider: scheduleProvider),
           Expanded(
-            child: widget.errorMessage != null
+            child: scheduleProvider.errorMessage != null
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
-                        widget.errorMessage!,
-                        style: const TextStyle(
+                        scheduleProvider.errorMessage!,
+                        style: TextStyle(
                           fontSize: 18,
-                          color: Colors.orange,
+                          color: AppColors.accent,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                   )
-                : (widget.shifts.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No schedule loaded.\nTap "Sync Now" to fetch your shifts.',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey[600],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: widget.shifts.length,
-                          itemBuilder: (context, index) {
-                            final shift = widget.shifts[index];
-                            final formattedCode = formatShiftWithEmoji(
-                              shift['code'] ?? '',
-                            );
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 6),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      formattedCode,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    Text(
-                                      shift['date'] ?? '',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        )),
+                : scheduleProvider.shifts.isEmpty
+                ? Center(
+                    child: Text(
+                      AppStrings.noSchedule,
+                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(14),
+                    itemCount: scheduleProvider.shifts.length,
+                    itemBuilder: (context, index) {
+                      final shift = scheduleProvider.shifts[index];
+                      final shiftDate = DateFormat(
+                        'MM/dd/yyyy',
+                      ).parse(shift.date);
+                      final isPastShift = shiftDate.isBefore(now);
+                      return ShiftCard(
+                        code: shift.code,
+                        date: shift.date,
+                        isChecked:
+                            scheduleProvider.shiftCheckedStates[shift.date] ??
+                            false,
+                        onChecked: isPastShift
+                            ? null
+                            : (value) {
+                                scheduleProvider.toggleShiftChecked(
+                                  shift.date,
+                                  value,
+                                );
+                              },
+                      );
+                    },
+                  ),
           ),
         ],
       ),
