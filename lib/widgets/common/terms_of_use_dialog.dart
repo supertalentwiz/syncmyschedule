@@ -78,8 +78,11 @@ We are not liable for any loss, delay, or consequence arising from the use of th
       actions: [
         TextButton(
           onPressed: () {
-            if (Platform.isAndroid || Platform.isIOS) {
+            if (Platform.isAndroid) {
+              SystemNavigator.pop();
+            } else if (Platform.isIOS) {
               SystemNavigator.pop(); // try graceful exit
+              exit(0);
             } else {
               exit(0); // fallback
             }
