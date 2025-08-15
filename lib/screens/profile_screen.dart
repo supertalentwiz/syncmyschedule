@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:syncmyschedule/widgets/common/custom_app_bar.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_sizes.dart';
@@ -17,12 +18,7 @@ class ProfileScreen extends StatelessWidget {
     final profile = Provider.of<ProfileProvider>(context).profile;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.profile),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-        elevation: 2,
-      ),
+      appBar: CustomAppBar(title: AppStrings.profile),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(

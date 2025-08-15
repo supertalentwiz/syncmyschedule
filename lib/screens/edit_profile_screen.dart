@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:syncmyschedule/widgets/common/custom_app_bar.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_sizes.dart';
@@ -65,11 +66,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-      ),
+      appBar: CustomAppBar(title: AppStrings.editProfile),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.padding),
         child: SingleChildScrollView(

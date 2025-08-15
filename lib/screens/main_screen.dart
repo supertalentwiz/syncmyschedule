@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../providers/schedule_provider.dart';
+import '../widgets/common/custom_app_bar.dart';
 import '../widgets/schedule/date_time_card.dart';
 import '../widgets/schedule/shift_card.dart';
 import '../widgets/schedule/shift_toolbar.dart';
@@ -51,11 +52,7 @@ class _MainScreenState extends State<MainScreen> {
     final now = DateTime.now();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.mySchedule),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-      ),
+      appBar: CustomAppBar(title: AppStrings.mySchedule),
       backgroundColor: AppColors.background,
       body: Column(
         children: [

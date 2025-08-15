@@ -36,6 +36,14 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> signOut() async {
+    try {
+      await _authService.signOut();
+    } catch (e) {
+      throw Exception('Sign out failed: $e');
+    }
+  }
+
   String _mapAuthError(String code) {
     switch (code) {
       case 'user-not-found':
