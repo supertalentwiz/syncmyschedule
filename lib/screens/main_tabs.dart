@@ -35,6 +35,7 @@ class _MainTabsState extends State<MainTabs> {
       listen: false,
     );
     final accepted = await scheduleProvider.checkTermsAccepted();
+    print(accepted);
     if (!accepted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showDialog(

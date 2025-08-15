@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_sizes.dart';
@@ -62,7 +64,7 @@ Any automation is limited to user-triggered schedule retrieval within FAA’s al
 We are not liable for any loss, delay, or consequence arising from the use of this app, including but not limited to missed shifts, schedule errors, or FAA access restrictions.
             ''',
             style: const TextStyle(
-              color: Colors.black87,
+              color: Colors.orange,
               height: 1.4,
               fontSize: 14,
             ),
@@ -75,7 +77,13 @@ We are not liable for any loss, delay, or consequence arising from the use of th
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (Platform.isAndroid || Platform.isIOS) {
+              SystemNavigator.pop(); // try graceful exit
+            } else {
+              exit(0); // fallback
+            }
+          },
           style: TextButton.styleFrom(foregroundColor: AppColors.accent),
           child: const Text(
             'Decline & Exit',
@@ -90,11 +98,15 @@ We are not liable for any loss, delay, or consequence arising from the use of th
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.accent,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSizes.borderRadius),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.padding,
+              vertical: AppSizes.buttonHeight,
             ),
           ),
           child: const Text(
-            'I Accept',
+            'Accept',
             style: TextStyle(
               color: AppColors.background,
               fontWeight: FontWeight.bold,
