@@ -4,6 +4,7 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_sizes.dart';
 import '../../constants/app_strings.dart';
 import '../../providers/schedule_provider.dart';
+import '../common/loading_dialog.dart';
 
 class ShiftToolbar extends StatelessWidget {
   final ScheduleProvider scheduleProvider;
@@ -65,11 +66,30 @@ class ShiftToolbar extends StatelessWidget {
           ElevatedButton(
             onPressed: hasShifts
                 ? () async {
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => const LoadingDialog(),
+                    );
                     final message = await scheduleProvider.syncToCalendar();
                     if (context.mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(message)));
+                      Navigator.pop(context); // Close loading dialog
+                      showDialog(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Sync Result'),
+                          content: Text(message),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                AppStrings.ok,
+                                style: TextStyle(color: AppColors.accent),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
                     }
                   }
                 : null,

@@ -8,7 +8,7 @@ class AppStrings {
   static const String signingUp = 'Signing up...';
   static const String noAccount = "Don't have an account? ";
   static const String signUpHere = 'Sign up here';
-  static const String haveAccount = 'Already have an account? ';
+  static const String haveAccount = 'Already have an account?';
   static const String signInHere = 'Sign in here';
   static const String mySchedule = 'My Schedule';
   static const String noSchedule =
@@ -38,4 +38,5 @@ class AppStrings {
   static const String iOSCalendar = 'iOS Calendar';
   static const String icsFileExport = 'ICS File Export';
   static const String selectCalendarType = 'Select Calendar Type';
+  static const String ok = 'OK';
 }

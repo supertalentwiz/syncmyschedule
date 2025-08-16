@@ -33,7 +33,9 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>This app requires calendar access to sync your FAA shifts.</string>
+	<string>Allow app to add shifts to your calendar</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Allow app to save ICS files</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
