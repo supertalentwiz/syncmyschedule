@@ -352,7 +352,7 @@ class ScheduleProvider with ChangeNotifier {
                 throw FormatException('Invalid time: $startStr');
               }
               int duration = _suffixDurations[suffix] ?? 8;
-              // Calculate end time
+              // Calculate end time with midnight adjustment
               var startDateTime = DateTime(
                 baseDate.year,
                 baseDate.month,
@@ -361,6 +361,10 @@ class ScheduleProvider with ChangeNotifier {
                 startTime.minute,
               );
               var endDateTime = startDateTime.add(Duration(hours: duration));
+              // Adjust end time if it crosses midnight to next day
+              if (endDateTime.hour < startTime.hour) {
+                endDateTime = endDateTime.add(const Duration(days: 1));
+              }
               ics.writeln(
                 'DTSTART:${DateFormat('yyyyMMdd\'T\'HHmmss').format(startDateTime)}Z',
               );
@@ -389,17 +393,24 @@ class ScheduleProvider with ChangeNotifier {
         }
         ics.writeln('END:VCALENDAR');
 
-        final dir = await getDownloadsDirectory();
+        final dir = await getApplicationDocumentsDirectory();
         if (dir == null) {
-          return 'Unable to access downloads directory';
+          return 'Unable to access application documents directory';
+        }
+        // Ensure the directory exists
+        final directory = Directory(dir.path);
+        if (!directory.existsSync()) {
+          directory.createSync(recursive: true);
         }
         final path =
             '${dir.path}/shifts_${DateTime.now().millisecondsSinceEpoch}.ics';
         final file = File(path);
         await file.writeAsString(ics.toString());
-        await Share.shareXFiles([XFile(path)], text: 'Your shifts ICS file');
+        await Share.shareXFiles([
+          XFile(path),
+        ], text: null); // Remove text to avoid extra file
 
-        return 'ICS file exported and shared from $path';
+        return 'ICS file exported successfully';
       }
 
       return 'Unknown calendar type';
