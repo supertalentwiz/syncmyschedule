@@ -28,7 +28,7 @@ class AuthHeader extends StatelessWidget {
               height: AppSizes.logoSize,
               width: AppSizes.logoSize,
             ),
-            const SizedBox(height: AppSizes.spacingSmall),
+            const SizedBox(height: AppSizes.spacingExtraSmall),
           ],
           RichText(
             text: TextSpan(

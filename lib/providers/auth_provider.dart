@@ -7,6 +7,14 @@ class AuthProvider with ChangeNotifier {
   bool _isLoading = false;
 
   bool get isLoading => _isLoading;
+  auth.User? get currentUser => _firebaseAuth.currentUser;
+  final auth.FirebaseAuth _firebaseAuth = auth.FirebaseAuth.instance;
+
+  AuthProvider() {
+    _firebaseAuth.authStateChanges().listen((user) {
+      notifyListeners();
+    });
+  }
 
   Future<String?> signIn(String email, String password) async {
     try {
@@ -22,14 +30,16 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<String?> register(String email, String password) async {
+  Future<String?> register(String email, String password, String name) async {
     try {
       _isLoading = true;
       notifyListeners();
-      await _authService.register(email, password);
+      await _authService.register(email, password, name);
       return null;
     } on auth.FirebaseAuthException catch (e) {
-      return e.message ?? 'Registration failed.';
+      return _mapAuthError(e.code);
+    } catch (e) {
+      return 'Registration failed: $e';
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -1,21 +1,36 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import '../models/profile_model.dart';
 import '../services/profile_service.dart';
 
 class ProfileProvider with ChangeNotifier {
   final ProfileService _profileService = ProfileService();
   ProfileModel _profile = ProfileModel(
-    phone: '+1 555 123 4567',
-    username: 'MykytaS',
-    email: 'mykyta@example.com',
-    schedulerId: 'user282811',
+    phone: '',
+    username: 'Unknown User',
+    email: 'No Email',
+    schedulerId: '',
   );
 
   ProfileModel get profile => _profile;
 
+  ProfileProvider() {
+    // Fetch profile data when the provider is initialized
+    if (auth.FirebaseAuth.instance.currentUser != null) {
+      fetchProfile();
+    }
+  }
+
   Future<void> fetchProfile() async {
-    _profile = await _profileService.fetchProfile();
-    notifyListeners();
+    try {
+      _profile = await _profileService.fetchProfile();
+      notifyListeners();
+    } catch (e) {
+      // Handle errors (e.g., no user signed in)
+      if (kDebugMode) {
+        print('Error fetching profile: $e');
+      }
+    }
   }
 
   Future<void> updateProfile(ProfileModel newProfile) async {

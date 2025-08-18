@@ -59,8 +59,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    if (!emailRegex.hasMatch(email)) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (_) =>
+              const ErrorDialog(message: 'Please enter a valid email address.'),
+        );
+      }
+      return;
+    }
+
+    if (password.length < 6) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (_) => const ErrorDialog(
+            message: 'Password must be at least 6 characters long.',
+          ),
+        );
+      }
+      return;
+    }
+
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final error = await authProvider.register(email, password);
+    final error = await authProvider.register(email, password, name);
     if (error != null && mounted) {
       showDialog(
         context: context,
@@ -70,8 +94,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     if (mounted) {
-      Navigator.pushReplacementNamed(context, '/main');
+      Navigator.pushReplacementNamed(context, '/login');
     }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _password2Controller.dispose();
+    super.dispose();
   }
 
   @override

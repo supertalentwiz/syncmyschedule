@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:timezone/data/latest.dart' as tz; // Import timezone data
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'constants/app_strings.dart';
 import 'constants/app_theme.dart';
 import 'constants/app_colors.dart';
@@ -20,7 +21,7 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  tz.initializeTimeZones(); // Initialize timezone data
+  tz.initializeTimeZones();
 
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle.light.copyWith(
@@ -45,16 +46,22 @@ class SyncMyScheduleApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ScheduleProvider()),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
       ],
-      child: MaterialApp(
-        title: AppStrings.appName,
-        theme: AppTheme.theme,
-        initialRoute: '/login',
-        routes: {
-          '/login': (context) => const LoginScreen(),
-          '/register': (context) => const RegisterScreen(),
-          '/main': (context) => const MainTabs(),
-          '/profile': (context) => const ProfileScreen(),
-          '/subscription': (context) => const SubscriptionScreen(),
+      child: Builder(
+        builder: (context) {
+          // Check if a user is already logged in
+          final isLoggedIn = auth.FirebaseAuth.instance.currentUser != null;
+          return MaterialApp(
+            title: AppStrings.appName,
+            theme: AppTheme.theme,
+            initialRoute: isLoggedIn ? '/main' : '/login',
+            routes: {
+              '/login': (context) => const LoginScreen(),
+              '/register': (context) => const RegisterScreen(),
+              '/main': (context) => const MainTabs(),
+              '/profile': (context) => const ProfileScreen(),
+              '/subscription': (context) => const SubscriptionScreen(),
+            },
+          );
         },
       ),
     );

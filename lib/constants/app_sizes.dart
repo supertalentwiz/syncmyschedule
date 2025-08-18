@@ -1,7 +1,7 @@
 class AppSizes {
-  static const double headerHeightLogin = 350.0;
-  static const double headerHeightRegister = 200.0;
-  static const double logoSize = 170.0;
+  static const double headerHeightLogin = 250.0;
+  static const double headerHeightRegister = 150.0;
+  static const double logoSize = 120.0;
   static const double padding = 24.0;
   static const double spacingSmall = 15.0;
   static const double spacingMiddleSmall = 8.0;

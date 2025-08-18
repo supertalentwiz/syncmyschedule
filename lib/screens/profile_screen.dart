@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:syncmyschedule/widgets/common/custom_app_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:syncmyschedule/widgets/common/calendar_selection_dialog.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_sizes.dart';
 import '../providers/profile_provider.dart';
 import '../providers/schedule_provider.dart';
-import '../screens/edit_profile_screen.dart';
-import '../widgets/common/calendar_selection_dialog.dart';
+import '../widgets/common/custom_app_bar.dart';
 import '../widgets/profile/info_card.dart';
 import '../widgets/profile/profile_avatar.dart';
-import '../widgets/profile/gradient_button.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Check if user is signed in
+    if (auth.FirebaseAuth.instance.currentUser == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/login');
+      });
+      return const SizedBox();
+    }
+
     final profile = Provider.of<ProfileProvider>(context).profile;
     final scheduleProvider = Provider.of<ScheduleProvider>(context);
 
@@ -44,18 +51,6 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: AppSizes.cardSpacing),
               InfoCard(
-                icon: Icons.phone_outlined,
-                label: AppStrings.phone,
-                value: profile.phone,
-              ),
-              const SizedBox(height: AppSizes.cardSpacing),
-              // InfoCard(
-              //   icon: Icons.perm_identity,
-              //   label: AppStrings.schedulerId,
-              //   value: profile.schedulerId,
-              // ),
-              const SizedBox(height: AppSizes.cardSpacing),
-              InfoCard(
                 icon: Icons.calendar_today,
                 label: AppStrings.calendarType,
                 value: scheduleProvider.calendarType,
@@ -66,17 +61,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // const Spacer(),
-              // GradientButton(
-              //   label: AppStrings.editProfile,
-              //   onPressed: () => Navigator.push(
-              //     context,
-              //     MaterialPageRoute(
-              //       builder: (_) =>
-              //           EditProfileScreen(initialData: profile.toMap()),
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         ),
