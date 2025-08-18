@@ -105,7 +105,7 @@ class ShiftToolbar extends StatelessWidget {
               ),
             ),
             child: const Text(
-              'Sync to Calendar',
+              'Add / Export',
               style: TextStyle(
                 fontSize: AppSizes.buttonFontSize * 0.8,
                 fontWeight: FontWeight.bold,

@@ -42,6 +42,10 @@ class CustomTextField extends StatelessWidget {
             focusedBorder: Theme.of(context).inputDecorationTheme.focusedBorder,
             labelStyle: Theme.of(context).inputDecorationTheme.labelStyle,
             hintStyle: Theme.of(context).inputDecorationTheme.hintStyle,
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: AppSizes.customInputPaddingVertical,
+              horizontal: AppSizes.customInputPaddingHorizontal,
+            ),
           ),
         ),
         if (onToggleVisibility != null)

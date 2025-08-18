@@ -30,38 +30,42 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: CustomAppBar(title: AppStrings.profile),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSizes.padding,
-            vertical: AppSizes.spacingLarge,
-          ),
-          child: Column(
-            children: [
-              ProfileAvatar(username: profile.username),
-              const SizedBox(height: AppSizes.spacingSmall),
-              Text(
-                profile.username,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: AppSizes.cardSpacing),
-              InfoCard(
-                icon: Icons.email_outlined,
-                label: AppStrings.email,
-                value: profile.email,
-              ),
-              const SizedBox(height: AppSizes.cardSpacing),
-              InfoCard(
-                icon: Icons.calendar_today,
-                label: AppStrings.calendarType,
-                value: scheduleProvider.calendarType,
-                onTap: () => showDialog(
-                  context: context,
-                  builder: (_) => CalendarSelectionDialog(
-                    scheduleProvider: scheduleProvider,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.padding,
+              vertical: AppSizes.spacingLarge,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ProfileAvatar(username: profile.username),
+                const SizedBox(height: AppSizes.spacingSmall),
+                Text(
+                  profile.username,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: AppSizes.cardSpacing),
+                InfoCard(
+                  icon: Icons.email_outlined,
+                  label: AppStrings.email,
+                  value: profile.email,
+                ),
+                const SizedBox(height: AppSizes.cardSpacing),
+                InfoCard(
+                  icon: Icons.calendar_today,
+                  label: AppStrings.calendarType,
+                  value: scheduleProvider.calendarType,
+                  onTap: () => showDialog(
+                    context: context,
+                    builder: (_) => CalendarSelectionDialog(
+                      scheduleProvider: scheduleProvider,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

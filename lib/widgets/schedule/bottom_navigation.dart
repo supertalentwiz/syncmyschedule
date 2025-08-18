@@ -31,7 +31,7 @@ class AppBottomNavigation extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -45,7 +45,7 @@ class AppBottomNavigation extends StatelessWidget {
           ),
           Container(
             margin: const EdgeInsets.only(bottom: 12),
-            width: 160,
+            width: 150,
             child: ElevatedButton.icon(
               onPressed: () => onItemTapped(1),
               icon: const Icon(
