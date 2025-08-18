@@ -14,12 +14,12 @@ class AppSizes {
   static const double titleFontSize = 32.0;
   static const double buttonFontSize = 18.0;
   static const double navBarHeight = 90.0;
-  static const double dateTimeCardHeight = 120.0;
+  static const double dateTimeCardHeight = 80.0;
   static const double dialogBorderRadius = 20.0;
   static const double smallIconSize = 24.0;
   static const double largeIconSize = 32.0;
   static const double avatarRadius = 54.0;
-  static const double cardHorizontalPadding = 20.0;
-  static const double cardVerticalPadding = 14.0;
+  static const double cardHorizontalPadding = 15.0;
+  static const double cardVerticalPadding = 9.0;
   static const double cardSpacing = 7.0;
 }

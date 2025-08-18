@@ -12,7 +12,7 @@ class DateTimeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.accent, Color(0xFFFFC107)],

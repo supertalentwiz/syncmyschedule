@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:syncmyschedule/widgets/common/custom_app_bar.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_sizes.dart';
@@ -20,11 +21,7 @@ class ProfileScreen extends StatelessWidget {
     final scheduleProvider = Provider.of<ScheduleProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.profile),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-      ),
+      appBar: CustomAppBar(title: AppStrings.profile),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -52,11 +49,11 @@ class ProfileScreen extends StatelessWidget {
                 value: profile.phone,
               ),
               const SizedBox(height: AppSizes.cardSpacing),
-              InfoCard(
-                icon: Icons.perm_identity,
-                label: AppStrings.schedulerId,
-                value: profile.schedulerId,
-              ),
+              // InfoCard(
+              //   icon: Icons.perm_identity,
+              //   label: AppStrings.schedulerId,
+              //   value: profile.schedulerId,
+              // ),
               const SizedBox(height: AppSizes.cardSpacing),
               InfoCard(
                 icon: Icons.calendar_today,
@@ -69,17 +66,17 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(),
-              GradientButton(
-                label: AppStrings.editProfile,
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        EditProfileScreen(initialData: profile.toMap()),
-                  ),
-                ),
-              ),
+              // const Spacer(),
+              // GradientButton(
+              //   label: AppStrings.editProfile,
+              //   onPressed: () => Navigator.push(
+              //     context,
+              //     MaterialPageRoute(
+              //       builder: (_) =>
+              //           EditProfileScreen(initialData: profile.toMap()),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),

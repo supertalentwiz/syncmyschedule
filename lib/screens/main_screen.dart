@@ -58,7 +58,7 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           const SizedBox(height: 12),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 15),
             child: DateTimeCard(date: _dateString, time: _timeString),
           ),
           const SizedBox(height: 12),
