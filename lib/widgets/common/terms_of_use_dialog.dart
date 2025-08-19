@@ -31,7 +31,7 @@ class TermsOfUseDialog extends StatelessWidget {
             '''
 Welcome to SyncMySchedule — a personal tool to help you view and sync your FAA schedule.
 
-By continuing, you agree to the following:
+This app uses your FAA credentials to fetch schedule data. All data is encrypted and stored securely using FlutterSecureStorage. Use of this app is subject to FAA policies and guidelines. By accepting, you agree to these terms.
 
 1. Unofficial Application
 
