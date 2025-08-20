@@ -186,7 +186,7 @@ class ScheduleProvider with ChangeNotifier {
     }
 
     if (_calendarType == AppStrings.none) {
-      return 'No calendar type selected';
+      return 'No calendar type selected. Go to profile to select it';
     }
 
     try {
@@ -281,6 +281,13 @@ class ScheduleProvider with ChangeNotifier {
                 startTime.minute,
               );
               var endDateTime = startDateTime.add(Duration(hours: duration));
+
+              // If shift crosses midnight → shift one day back
+              if (endDateTime.day != baseDate.day) {
+                startDateTime = startDateTime.subtract(const Duration(days: 1));
+                endDateTime = endDateTime.subtract(const Duration(days: 1));
+              }
+
               event.start = tz.TZDateTime.from(startDateTime, location);
               event.end = tz.TZDateTime.from(endDateTime, location);
               event.allDay = false;
@@ -383,6 +390,13 @@ class ScheduleProvider with ChangeNotifier {
                 startMinute,
               );
               DateTime endLocal = startLocal.add(Duration(hours: duration));
+
+              // Overnight → shift one day back
+              if (endLocal.day != baseDate.day) {
+                startLocal = startLocal.subtract(const Duration(days: 1));
+                endLocal = endLocal.subtract(const Duration(days: 1));
+              }
+
               final tzid = _localTzidOrNull();
               if (tzid != null) {
                 ics.writeln(

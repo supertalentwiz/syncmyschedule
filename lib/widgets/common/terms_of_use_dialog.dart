@@ -64,7 +64,7 @@ Any automation is limited to user-triggered schedule retrieval within FAA’s al
 We are not liable for any loss, delay, or consequence arising from the use of this app, including but not limited to missed shifts, schedule errors, or FAA access restrictions.
             ''',
             style: const TextStyle(
-              color: Colors.orange,
+              color: AppColors.primary,
               height: 1.4,
               fontSize: 14,
             ),
