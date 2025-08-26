@@ -1,7 +1,7 @@
 name: syncmyschedule
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.8.1
@@ -29,6 +29,7 @@ dependencies:
   share_plus: ^11.1.0
   permission_handler: ^12.0.1
   file_picker: ^10.3.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -40,3 +41,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
