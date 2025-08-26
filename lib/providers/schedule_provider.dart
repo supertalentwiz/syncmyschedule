@@ -31,9 +31,9 @@ class ScheduleProvider with ChangeNotifier {
 
   // Shift legend mapping for titles
   static const Map<String, String> _shiftLegend = {
-    r'\$': 'Overtime Shift',
-    r'\^': 'Credit Time Shift - XTE',
-    r'\!': 'Comp Time Shift - CTE',
+    r'$': 'Overtime Shift',
+    r'^': 'Credit Time Shift - XTE',
+    r'!': 'Comp Time Shift - CTE',
     'A': 'Annual Leave',
     'ADMIN': 'Administrative Leave',
     'AWOL': 'Absent Without Leave',
@@ -250,6 +250,7 @@ class ScheduleProvider with ChangeNotifier {
           final emojiKey = specialSuffix.isNotEmpty ? specialSuffix : suffix;
           final emoji = ShiftLegend.shiftEmojiLegend[emojiKey] ?? '';
           title = '$title $emoji'.trim();
+          print(title);
 
           bool isAllDay = _leaveTypes.contains(suffix) || numericPart.isEmpty;
           final baseDate = DateFormat('MM/dd/yyyy').parse(shift.date);
