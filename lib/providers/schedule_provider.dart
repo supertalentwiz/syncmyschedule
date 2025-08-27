@@ -225,6 +225,7 @@ class ScheduleProvider with ChangeNotifier {
         final timeFormat = DateFormat('H:mm');
         for (var shift in selectedShifts) {
           final event = Event(selectedCalendar.id);
+
           // Parse shift code dynamically
           final numericReg = RegExp(r'^\d+');
           String numericPart = '';
@@ -250,29 +251,25 @@ class ScheduleProvider with ChangeNotifier {
           final emojiKey = specialSuffix.isNotEmpty ? specialSuffix : suffix;
           final emoji = ShiftLegend.shiftEmojiLegend[emojiKey] ?? '';
           title = '$title $emoji'.trim();
-          print(title);
 
-          bool isAllDay = _leaveTypes.contains(suffix) || numericPart.isEmpty;
+          final isAllDay = _leaveTypes.contains(suffix) || numericPart.isEmpty;
           final baseDate = DateFormat('MM/dd/yyyy').parse(shift.date);
-          if (!isAllDay) {
-            // Parse start time from numericPart
-            String startStr = '';
-            if (numericPart.length == 1 || numericPart.length == 2) {
-              startStr = '$numericPart:00';
-            } else if (numericPart.length == 3) {
-              startStr = numericPart[0] + ':' + numericPart.substring(1);
-            } else if (numericPart.length == 4) {
-              startStr =
-                  numericPart.substring(0, 2) + ':' + numericPart.substring(2);
-            }
 
+          if (!isAllDay) {
             try {
-              final startTime = timeFormat.parseStrict(startStr);
-              int hour = startTime.hour;
-              int minute = startTime.minute;
-              if (hour > 23 || minute > 59) {
-                throw FormatException('Invalid time: $startStr');
+              String startStr = '';
+              if (numericPart.length == 1 || numericPart.length == 2) {
+                startStr = '$numericPart:00';
+              } else if (numericPart.length == 3) {
+                startStr = numericPart[0] + ':' + numericPart.substring(1);
+              } else if (numericPart.length == 4) {
+                startStr =
+                    numericPart.substring(0, 2) +
+                    ':' +
+                    numericPart.substring(2);
               }
+
+              final startTime = timeFormat.parseStrict(startStr);
               int duration = _suffixDurations[suffix] ?? 8;
               var startDateTime = DateTime(
                 baseDate.year,
@@ -283,7 +280,7 @@ class ScheduleProvider with ChangeNotifier {
               );
               var endDateTime = startDateTime.add(Duration(hours: duration));
 
-              // If shift crosses midnight → shift one day back
+              // Overnight → shift one day back
               if (endDateTime.day != baseDate.day) {
                 startDateTime = startDateTime.subtract(const Duration(days: 1));
                 endDateTime = endDateTime.subtract(const Duration(days: 1));
@@ -293,26 +290,36 @@ class ScheduleProvider with ChangeNotifier {
               event.end = tz.TZDateTime.from(endDateTime, location);
               event.allDay = false;
             } catch (e) {
-              // Fallback to all-day
-              event.start = tz.TZDateTime(
-                location,
-                baseDate.year,
-                baseDate.month,
-                baseDate.day,
+              // Fallback to full-day shift
+              event.start = tz.TZDateTime.from(
+                DateTime(baseDate.year, baseDate.month, baseDate.day, 0, 0, 0),
+                tz.local,
               );
-              event.end = event.start!.add(const Duration(days: 1));
-              event.allDay = true;
+              event.end = tz.TZDateTime.from(
+                DateTime(
+                  baseDate.year,
+                  baseDate.month,
+                  baseDate.day,
+                  23,
+                  59,
+                  59,
+                ),
+                tz.local,
+              );
+              event.allDay = false;
             }
           } else {
-            event.start = tz.TZDateTime(
-              location,
-              baseDate.year,
-              baseDate.month,
-              baseDate.day,
+            event.start = tz.TZDateTime.from(
+              DateTime(baseDate.year, baseDate.month, baseDate.day, 0, 0, 0),
+              tz.local,
             );
-            event.end = event.start!.add(const Duration(days: 1));
-            event.allDay = true;
+            event.end = tz.TZDateTime.from(
+              DateTime(baseDate.year, baseDate.month, baseDate.day, 23, 59, 59),
+              tz.local,
+            );
+            event.allDay = false;
           }
+
           event.title = title;
           event.description = 'Imported by SyncMySchedule';
           final result = await plugin.createOrUpdateEvent(event);
@@ -343,27 +350,27 @@ class ScheduleProvider with ChangeNotifier {
             numericPart = numericReg.firstMatch(shift.code)?.group(0) ?? '';
             suffix = shift.code.substring(numericPart.length);
           }
+
           String specialSuffix = '';
           final specialReg = RegExp(r'[\$\^!]+$');
           if (specialReg.hasMatch(suffix)) {
             specialSuffix = specialReg.firstMatch(suffix)?.group(0) ?? '';
             suffix = suffix.substring(0, suffix.length - specialSuffix.length);
           }
+
           String title = _shiftLegend[suffix] ?? suffix;
           if (specialSuffix.isNotEmpty)
             title = _shiftLegend[specialSuffix] ?? title;
           final emojiKey = specialSuffix.isNotEmpty ? specialSuffix : suffix;
           final emoji = ShiftLegend.shiftEmojiLegend[emojiKey] ?? '';
           title = '$title $emoji'.trim();
+
           final baseDate = DateFormat('MM/dd/yyyy').parse(shift.date);
           final isAllDay = _leaveTypes.contains(suffix) || numericPart.isEmpty;
 
-          ics.writeln('BEGIN:VEVENT');
-          ics.writeln(
-            'UID:${shift.code}-${shift.date.replaceAll('/', '')}-${DateTime.now().millisecondsSinceEpoch}@syncmyschedule.com',
-          );
-          ics.writeln('DTSTAMP:$dtStamp');
-          bool wroteDate = false;
+          DateTime startLocal;
+          DateTime endLocal;
+
           if (!isAllDay) {
             try {
               int startMinute = 0;
@@ -383,48 +390,76 @@ class ScheduleProvider with ChangeNotifier {
                 throw FormatException('Invalid time');
               }
               int duration = _suffixDurations[suffix] ?? 8;
-              DateTime startLocal = DateTime(
+              startLocal = DateTime(
                 baseDate.year,
                 baseDate.month,
                 baseDate.day,
                 startHour,
                 startMinute,
               );
-              DateTime endLocal = startLocal.add(Duration(hours: duration));
+              endLocal = startLocal.add(Duration(hours: duration));
 
               // Overnight → shift one day back
               if (endLocal.day != baseDate.day) {
                 startLocal = startLocal.subtract(const Duration(days: 1));
                 endLocal = endLocal.subtract(const Duration(days: 1));
               }
-
-              final tzid = _localTzidOrNull();
-              if (tzid != null) {
-                ics.writeln(
-                  'DTSTART;TZID=$tzid:${_formatIcsLocal(startLocal)}',
-                );
-                ics.writeln('DTEND;TZID=$tzid:${_formatIcsLocal(endLocal)}');
-              } else {
-                ics.writeln('DTSTART:${_formatIcsLocal(startLocal)}');
-                ics.writeln('DTEND:${_formatIcsLocal(endLocal)}');
-              }
-              wroteDate = true;
             } catch (e) {
-              debugPrint('Invalid time format for shift ${shift.code}: $e');
+              startLocal = DateTime(
+                baseDate.year,
+                baseDate.month,
+                baseDate.day,
+                0,
+              );
+              endLocal = DateTime(
+                baseDate.year,
+                baseDate.month,
+                baseDate.day,
+                23,
+                59,
+                59,
+              );
             }
-          }
-          if (!wroteDate) {
-            ics.writeln(
-              'DTSTART;VALUE=DATE:${DateFormat('yyyyMMdd').format(baseDate)}',
+          } else {
+            // All-day shift
+            startLocal = DateTime(
+              baseDate.year,
+              baseDate.month,
+              baseDate.day,
+              0,
+              0,
+              0,
             );
-            ics.writeln(
-              'DTEND;VALUE=DATE:${DateFormat('yyyyMMdd').format(baseDate.add(const Duration(days: 1)))}',
+            endLocal = DateTime(
+              baseDate.year,
+              baseDate.month,
+              baseDate.day,
+              23,
+              59,
+              59,
             );
           }
+
+          final tzid = _localTzidOrNull();
+          ics.writeln('BEGIN:VEVENT');
+          ics.writeln(
+            'UID:${shift.code}-${shift.date.replaceAll('/', '')}-${DateTime.now().millisecondsSinceEpoch}@syncmyschedule.com',
+          );
+          ics.writeln('DTSTAMP:$dtStamp');
+
+          if (tzid != null) {
+            ics.writeln('DTSTART;TZID=$tzid:${_formatIcsLocal(startLocal)}');
+            ics.writeln('DTEND;TZID=$tzid:${_formatIcsLocal(endLocal)}');
+          } else {
+            ics.writeln('DTSTART:${_formatIcsLocal(startLocal)}');
+            ics.writeln('DTEND:${_formatIcsLocal(endLocal)}');
+          }
+
           ics.writeln('SUMMARY:$title');
           ics.writeln('DESCRIPTION:Imported by SyncMySchedule');
           ics.writeln('END:VEVENT');
         }
+
         ics.writeln('END:VCALENDAR');
 
         // Handle platform-specific ICS export
@@ -439,17 +474,14 @@ class ScheduleProvider with ChangeNotifier {
           await Share.shareXFiles([XFile(path, mimeType: 'text/calendar')]);
           return 'ICS file exported successfully';
         } else if (Platform.isAndroid) {
-          // Request storage permission for Android
           final permissionStatus = await Permission.storage.request();
           if (!permissionStatus.isGranted) {
             return 'Storage permission denied. Cannot save ICS file.';
           }
 
-          // Let user select directory
           String? selectedDirectory = await FilePicker.platform
               .getDirectoryPath();
           if (selectedDirectory == null) {
-            // Fallback to application documents directory if user cancels
             debugPrint(
               'User cancelled directory selection, using application documents directory',
             );
@@ -464,8 +496,8 @@ class ScheduleProvider with ChangeNotifier {
           if (!newDirectory.existsSync()) {
             newDirectory.createSync(recursive: true);
           }
-          await file.copy(newPath); // Copy from temp to selected directory
-          await file.delete(); // Clean up temp file
+          await file.copy(newPath);
+          await file.delete();
           debugPrint('ICS file saved to: $newPath');
           return 'ICS file saved successfully to $newPath';
         }
