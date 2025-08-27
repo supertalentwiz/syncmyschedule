@@ -111,6 +111,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     actionText: AppStrings.signUpHere,
                     onTap: () => Navigator.pushNamed(context, '/register'),
                   ),
+                  AuthNavigationText(
+                    prompt: AppStrings.forgotPwd,
+                    actionText: AppStrings.resetPwd,
+                    onTap: () => Navigator.pushNamed(context, '/register'),
+                  ),
                 ],
               ),
             ),

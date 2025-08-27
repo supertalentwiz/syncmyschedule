@@ -39,4 +39,6 @@ class AppStrings {
   static const String icsFileExport = 'ICS File Export';
   static const String selectCalendarType = 'Select Calendar Type';
   static const String ok = 'OK';
+  static const String forgotPwd = 'Forgot Password? ';
+  static const String resetPwd = 'Reset Here';
 }
