@@ -1,10 +1,21 @@
-const puppeteer = require("puppeteer-core");
-const chromium = require("@sparticuz/chromium");
+require("dotenv").config();
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { onRequest } = require("firebase-functions/v2/https");
+const admin = require("firebase-admin");
+const functions = require("firebase-functions");
+
+const cors = require("cors")({ origin: true });
+
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 exports.fetchFaaShifts = onCall(
   { timeoutSeconds: 300, memory: "1GiB" },
   async (request) => {
+    const puppeteer = require("puppeteer-core");
+    const chromium = require("@sparticuz/chromium");
+
     const { username, password } = request.data || {};
     if (!username || !password) {
       throw new HttpsError("invalid-argument", "Username and password are required");
@@ -97,3 +108,42 @@ exports.fetchFaaShifts = onCall(
     }
   }
 );
+
+exports.deleteAccountWeb = onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    if (req.method === "OPTIONS") return res.status(204).send("");
+
+    if (req.method !== "POST") return res.status(405).send("Method not allowed");
+
+    const { email, password } = req.body || {};
+    if (!email || !password) return res.status(400).send("Email and password required.");
+
+    try {
+      const fetch = (await import("node-fetch")).default;
+      const apiKey = process.env.APP_API_KEY; // renamed variable
+      if (!apiKey) return res.status(500).send("API key not configured");
+
+      const resp = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, returnSecureToken: true }),
+        }
+      );
+
+      const data = await resp.json();
+      if (!resp.ok) return res.status(401).send(data.error?.message || "Invalid credentials");
+
+      const uid = data.localId;
+
+      await admin.auth().deleteUser(uid).catch(() => {});
+      await admin.firestore().collection("users").doc(uid).delete().catch(() => {});
+
+      return res.status(200).send("Account successfully deleted.");
+    } catch (err) {
+      console.error("Error in deleteAccountWeb:", err);
+      return res.status(500).send(`Internal server error: ${err.message}`);
+    }
+  });
+});

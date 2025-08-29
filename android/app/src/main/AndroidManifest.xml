@@ -13,7 +13,7 @@
         </intent>
     </queries>
     <application
-        android:label="syncmyschedule"
+        android:label="SyncMySchedule"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
