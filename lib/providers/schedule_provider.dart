@@ -212,6 +212,11 @@ class ScheduleProvider with ChangeNotifier {
             break;
           }
         }
+
+        if (calendarsResult.data!.isEmpty) {
+          return 'No calendars available on device';
+        }
+
         selectedCalendar ??= calendarsResult.data!.firstWhere(
           (c) => c.isReadOnly == false,
           orElse: () => calendarsResult.data!.first,
@@ -474,32 +479,24 @@ class ScheduleProvider with ChangeNotifier {
           await Share.shareXFiles([XFile(path, mimeType: 'text/calendar')]);
           return 'ICS file exported successfully';
         } else if (Platform.isAndroid) {
-          final permissionStatus = await Permission.storage.request();
-          if (!permissionStatus.isGranted) {
-            return 'Storage permission denied. Cannot save ICS file.';
+          try {
+            // Try saving directly to Downloads
+            final downloadsDir = Directory('/storage/emulated/0/Download');
+            if (!downloadsDir.existsSync()) {
+              return 'Downloads folder not found';
+            }
+
+            final newPath = '${downloadsDir.path}/$filename';
+            final newFile = File(newPath);
+            await file.copy(newFile.path);
+
+            debugPrint('ICS file saved to: $newPath');
+            return 'ICS file saved successfully to $newPath';
+          } catch (e) {
+            debugPrint('Error saving ICS on Android: $e');
+            return 'Error saving ICS file: $e';
           }
 
-          String? selectedDirectory = await FilePicker.platform
-              .getDirectoryPath();
-          if (selectedDirectory == null) {
-            debugPrint(
-              'User cancelled directory selection, using application documents directory',
-            );
-            return 'ICS file saved to $path';
-          }
-
-          final newPath = '$selectedDirectory/$filename';
-          final newFile = File(newPath);
-          final newDirectory = Directory(
-            newPath.substring(0, newPath.lastIndexOf('/')),
-          );
-          if (!newDirectory.existsSync()) {
-            newDirectory.createSync(recursive: true);
-          }
-          await file.copy(newPath);
-          await file.delete();
-          debugPrint('ICS file saved to: $newPath');
-          return 'ICS file saved successfully to $newPath';
         }
 
         return 'Unsupported platform';

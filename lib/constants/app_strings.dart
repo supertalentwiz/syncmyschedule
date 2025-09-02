@@ -34,7 +34,7 @@ class AppStrings {
   static const String subscribeButton = 'Subscribe';
   static const String calendarType = 'Calendar Type';
   static const String none = 'None';
-  static const String android = 'Android';
+  static const String android = 'Google Calendar';
   static const String iOSCalendar = 'iOS Calendar';
   static const String icsFileExport = 'ICS File Export';
   static const String selectCalendarType = 'Select Calendar Type';
