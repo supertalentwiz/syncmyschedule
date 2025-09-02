@@ -14,7 +14,7 @@ class AppSizes {
   static const double titleFontSize = 32.0;
   static const double buttonFontSize = 18.0;
   static const double navBarHeight = 70.0;
-  static const double dateTimeCardHeight = 80.0;
+  static const double dateTimeCardHeight = 90.0;
   static const double dialogBorderRadius = 20.0;
   static const double smallIconSize = 22.0;
   static const double largeIconSize = 32.0;

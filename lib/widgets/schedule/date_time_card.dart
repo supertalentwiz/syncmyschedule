@@ -28,7 +28,7 @@ class DateTimeCard extends StatelessWidget {
       ),
       constraints: const BoxConstraints(minHeight: AppSizes.dateTimeCardHeight),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(date, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 6),
