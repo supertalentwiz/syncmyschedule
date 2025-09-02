@@ -217,9 +217,11 @@ class _MainTabsState extends State<MainTabs> {
         const SubscriptionScreen(),
         const ProfileScreen(),
       ][_selectedIndex],
-      bottomNavigationBar: AppBottomNavigation(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
+      bottomNavigationBar: SafeArea( // 👈 FIX: ensures nav bar is never covered
+        child: AppBottomNavigation(
+          selectedIndex: _selectedIndex,
+          onItemTapped: _onItemTapped,
+        ),
       ),
     );
   }
