@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:device_calendar/device_calendar.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:external_path/external_path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
@@ -329,10 +329,9 @@ class ScheduleProvider with ChangeNotifier {
           event.description = 'Imported by SyncMySchedule';
           final result = await plugin.createOrUpdateEvent(event);
           if (result?.isSuccess == false) {
-            debugPrint(
-              'Failed to sync shift on ${shift.date}: ${result?.errors.join(", ")}',
-            );
-            return 'Failed to sync shift on ${shift.date}: ${result?.errors.join(", ")}';
+            final errorMsgs = result?.errors?.map((e) => e.errorMessage).join(", ");
+            debugPrint('Failed to sync shift on ${shift.date}: $errorMsgs');
+            return 'Failed to sync shift on ${shift.date}: $errorMsgs';
           }
         }
 
@@ -480,23 +479,19 @@ class ScheduleProvider with ChangeNotifier {
           return 'ICS file exported successfully';
         } else if (Platform.isAndroid) {
           try {
-            // Try saving directly to Downloads
-            final downloadsDir = Directory('/storage/emulated/0/Download');
-            if (!downloadsDir.existsSync()) {
-              return 'Downloads folder not found';
-            }
-
-            final newPath = '${downloadsDir.path}/$filename';
-            final newFile = File(newPath);
-            await file.copy(newFile.path);
+            final downloadsPath =
+              await ExternalPath.getExternalStoragePublicDirectory("Download");
+            final newPath = '$downloadsPath/$filename';
+            final newFile = await file.copy(newPath);
 
             debugPrint('ICS file saved to: $newPath');
             return 'ICS file saved successfully to $newPath';
           } catch (e) {
             debugPrint('Error saving ICS on Android: $e');
-            return 'Error saving ICS file: $e';
+            // fallback: share instead of saving
+            await Share.shareXFiles([XFile(path, mimeType: 'text/calendar')]);
+            return 'ICS file shared instead (save failed): $e';
           }
-
         }
 
         return 'Unsupported platform';
