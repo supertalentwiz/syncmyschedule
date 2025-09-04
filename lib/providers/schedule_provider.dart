@@ -5,7 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:external_path/external_path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+// import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -17,13 +17,16 @@ import '../constants/shift_legend.dart';
 class ScheduleProvider with ChangeNotifier {
   final ScheduleService _scheduleService = ScheduleService();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
   List<ShiftModel> _shifts = [];
+  List<String> _payPeriods = [];
   String? _errorMessage;
   bool _isLoading = false;
   Map<String, bool> _shiftCheckedStates = {};
   String _calendarType = AppStrings.none;
 
   List<ShiftModel> get shifts => _shifts;
+  List<String> get payPeriods => _payPeriods;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
   Map<String, bool> get shiftCheckedStates => _shiftCheckedStates;
@@ -120,16 +123,37 @@ class ScheduleProvider with ChangeNotifier {
     await _storage.write(key: 'faa_password', value: password);
   }
 
-  Future<void> fetchSchedule(String username, String password) async {
+  Future<void> fetchSchedule(
+    String username,
+    String password, {
+    String? periodId,
+  }) async {
     try {
       _isLoading = true;
       _errorMessage = null;
       notifyListeners();
-      final newShifts = await _scheduleService.fetchSchedule(
+
+      print(periodId);
+
+      final result = await _scheduleService.fetchSchedule(
         username: username,
         password: password,
+        periodId: periodId,
       );
-      _shifts = newShifts;
+
+      print(result);
+
+      // Extract schedule and pay periods
+      _shifts = result['schedule'] as List<ShiftModel>? ?? [];
+      if (periodId == null) {
+        // Only update payPeriods on initial fetch
+        _payPeriods = (result['payPeriods'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [];
+      }
+
+      // Maintain previous checked states if possible
       _shiftCheckedStates = {
         for (var shift in _shifts)
           shift.date: _shiftCheckedStates[shift.date] ?? false,
@@ -139,10 +163,15 @@ class ScheduleProvider with ChangeNotifier {
       _errorMessage = e.toString();
       _shifts = [];
       _shiftCheckedStates = {};
+      if (periodId == null) _payPeriods = [];
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> fetchScheduleForPeriod(String username, String password, String periodId) async {
+    await fetchSchedule(username, password, periodId: periodId);
   }
 
   void toggleShiftChecked(String date, bool isChecked) {

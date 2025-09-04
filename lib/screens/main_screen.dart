@@ -19,24 +19,23 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late String _dateString;
-  late String _timeString;
   late Timer _timer;
+  String? _selectedPayPeriod;
 
   @override
   void initState() {
     super.initState();
-    _updateDateTime();
+    _updateDate();
     _timer = Timer.periodic(
       const Duration(minutes: 1),
-      (_) => _updateDateTime(),
+      (_) => _updateDate(),
     );
   }
 
-  void _updateDateTime() {
+  void _updateDate() {
     final now = DateTime.now();
     setState(() {
       _dateString = DateFormat('EEEE, MMMM d, yyyy').format(now);
-      _timeString = DateFormat('hh:mm a').format(now);
     });
   }
 
@@ -59,7 +58,26 @@ class _MainScreenState extends State<MainScreen> {
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15),
-            child: DateTimeCard(date: _dateString, time: _timeString),
+            child: DateTimeCard(
+              date: _dateString,
+              payPeriods: scheduleProvider.payPeriods,
+              selectedPayPeriod: _selectedPayPeriod,
+              onPayPeriodChanged: (value) async {
+                setState(() {
+                  _selectedPayPeriod = value;
+                });
+                if (value != null) {
+                  final credentials = await scheduleProvider.getSavedCredentials();
+                  if (credentials != null) {
+                    // Fetch schedule (initial fetch) – you can later implement fetch for specific period
+                    await scheduleProvider.fetchSchedule(
+                      credentials['username']!,
+                      credentials['password']!,
+                    );
+                  }
+                }
+              },
+            ),
           ),
           const SizedBox(height: 12),
           ShiftToolbar(scheduleProvider: scheduleProvider),
@@ -80,39 +98,32 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   )
                 : scheduleProvider.shifts.isEmpty
-                ? Center(
-                    child: Text(
-                      AppStrings.noSchedule,
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      textAlign: TextAlign.center,
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(14),
-                    itemCount: scheduleProvider.shifts.length,
-                    itemBuilder: (context, index) {
-                      final shift = scheduleProvider.shifts[index];
-                      final shiftDate = DateFormat(
-                        'MM/dd/yyyy',
-                      ).parse(shift.date);
-                      final isPastShift = shiftDate.isBefore(now);
-                      return ShiftCard(
-                        code: shift.code,
-                        date: shift.date,
-                        isChecked:
-                            scheduleProvider.shiftCheckedStates[shift.date] ??
-                            false,
-                        onChecked: isPastShift
-                            ? null
-                            : (value) {
-                                scheduleProvider.toggleShiftChecked(
-                                  shift.date,
-                                  value,
-                                );
-                              },
-                      );
-                    },
-                  ),
+                    ? Center(
+                        child: Text(
+                          AppStrings.noSchedule,
+                          style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(14),
+                        itemCount: scheduleProvider.shifts.length,
+                        itemBuilder: (context, index) {
+                          final shift = scheduleProvider.shifts[index];
+                          final shiftDate = DateFormat('MM/dd/yyyy').parse(shift.date);
+                          final isPastShift = shiftDate.isBefore(now);
+                          return ShiftCard(
+                            code: shift.code,
+                            date: shift.date,
+                            isChecked: scheduleProvider.shiftCheckedStates[shift.date] ?? false,
+                            onChecked: isPastShift
+                                ? null
+                                : (value) {
+                                    scheduleProvider.toggleShiftChecked(shift.date, value);
+                                  },
+                          );
+                        },
+                      ),
           ),
         ],
       ),

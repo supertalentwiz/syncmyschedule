@@ -4,9 +4,17 @@ import '../../constants/app_sizes.dart';
 
 class DateTimeCard extends StatelessWidget {
   final String date;
-  final String time;
+  final List<String> payPeriods;
+  final String? selectedPayPeriod;
+  final ValueChanged<String?>? onPayPeriodChanged;
 
-  const DateTimeCard({super.key, required this.date, required this.time});
+  const DateTimeCard({
+    super.key,
+    required this.date,
+    required this.payPeriods,
+    this.selectedPayPeriod,
+    this.onPayPeriodChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +40,27 @@ class DateTimeCard extends StatelessWidget {
         children: [
           Text(date, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 6),
-          Text(
-            time,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.background.withOpacity(0.7),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                onPressed: () {},
+                child: const Text('Calendar View'),
+              ),
+              DropdownButton<String>(
+                value: selectedPayPeriod,
+                hint: const Text('Select Pay Period'),
+                items: payPeriods
+                    .map(
+                      (period) => DropdownMenuItem(
+                        value: period,
+                        child: Text(period),
+                      ),
+                    )
+                    .toList(),
+                onChanged: onPayPeriodChanged,
+              ),
+            ],
           ),
         ],
       ),
