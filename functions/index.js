@@ -8,6 +8,9 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 const db = admin.firestore();
+if (process.env.FUNCTIONS_EMULATOR) {
+  db.settings({ host: "localhost:8080", ssl: false });
+}
 
 exports.fetchFaaShifts = onCall(
   { timeoutSeconds: 300, memory: "1GiB", region: "us-central1" },
