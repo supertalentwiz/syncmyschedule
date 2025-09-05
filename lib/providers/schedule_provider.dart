@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:device_calendar/device_calendar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -24,6 +25,7 @@ class ScheduleProvider with ChangeNotifier {
   bool _isLoading = false;
   Map<String, bool> _shiftCheckedStates = {};
   String _calendarType = AppStrings.none;
+  List<dynamic>? _cookies; // <-- store cookies here
 
   List<ShiftModel> get shifts => _shifts;
   List<String> get payPeriods => _payPeriods;
@@ -123,6 +125,19 @@ class ScheduleProvider with ChangeNotifier {
     await _storage.write(key: 'faa_password', value: password);
   }
 
+  // Load cookies from secure storage on app start
+  Future<void> loadCookies() async {
+    final stored = await _storage.read(key: 'faa_cookies');
+    if (stored != null) {
+      _cookies = jsonDecode(stored);
+    }
+  }
+
+  Future<void> saveCookies(List<dynamic> cookies) async {
+    _cookies = cookies;
+    await _storage.write(key: 'faa_cookies', value: jsonEncode(cookies));
+  }
+
   Future<void> fetchSchedule(
     String username,
     String password, {
@@ -139,15 +154,24 @@ class ScheduleProvider with ChangeNotifier {
         username: username,
         password: password,
         periodId: periodId,
+        cookies: _cookies, // pass the internal cookie
       );
 
       print(result);
 
+      // Save returned cookies for next fetch
+      if (result['cookies'] != null) {
+        await saveCookies(result['cookies']);
+      }
+
       // Extract schedule and pay periods
-      _shifts = result['schedule'] as List<ShiftModel>? ?? [];
+      _shifts =
+          (result['schedule'] as List<dynamic>?)?.cast<ShiftModel>().toList() ??
+          [];
+
       if (periodId == null) {
-        // Only update payPeriods on initial fetch
-        _payPeriods = (result['payPeriods'] as List<dynamic>?)
+        _payPeriods =
+            (result['payPeriods'] as List<dynamic>?)
                 ?.map((e) => e.toString())
                 .toList() ??
             [];
@@ -170,7 +194,11 @@ class ScheduleProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchScheduleForPeriod(String username, String password, String periodId) async {
+  Future<void> fetchScheduleForPeriod(
+    String username,
+    String password,
+    String periodId,
+  ) async {
     await fetchSchedule(username, password, periodId: periodId);
   }
 
@@ -358,7 +386,9 @@ class ScheduleProvider with ChangeNotifier {
           event.description = 'Imported by SyncMySchedule';
           final result = await plugin.createOrUpdateEvent(event);
           if (result?.isSuccess == false) {
-            final errorMsgs = result?.errors?.map((e) => e.errorMessage).join(", ");
+            final errorMsgs = result?.errors
+                ?.map((e) => e.errorMessage)
+                .join(", ");
             debugPrint('Failed to sync shift on ${shift.date}: $errorMsgs');
             return 'Failed to sync shift on ${shift.date}: $errorMsgs';
           }
@@ -509,7 +539,9 @@ class ScheduleProvider with ChangeNotifier {
         } else if (Platform.isAndroid) {
           try {
             final downloadsPath =
-              await ExternalPath.getExternalStoragePublicDirectory("Download");
+                await ExternalPath.getExternalStoragePublicDirectory(
+                  "Download",
+                );
             final newPath = '$downloadsPath/$filename';
             final newFile = await file.copy(newPath);
 

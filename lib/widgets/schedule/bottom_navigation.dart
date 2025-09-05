@@ -22,6 +22,8 @@ class AppBottomNavigation extends StatelessWidget {
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(40),
           topRight: Radius.circular(40),
+          bottomLeft: Radius.circular(40),
+          bottomRight: Radius.circular(40),
         ),
         boxShadow: const [
           BoxShadow(
@@ -32,6 +34,7 @@ class AppBottomNavigation extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -44,7 +47,6 @@ class AppBottomNavigation extends StatelessWidget {
             onPressed: () => onItemTapped(0),
           ),
           Container(
-            margin: const EdgeInsets.only(bottom: 12),
             width: 150,
             child: ElevatedButton.icon(
               onPressed: () => onItemTapped(1),

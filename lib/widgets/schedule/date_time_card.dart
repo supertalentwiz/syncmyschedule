@@ -18,18 +18,30 @@ class DateTimeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Button styling constants
+    const double borderRadius = 20.0;
+    const double borderWidth = 2.0;
+    const double buttonHeight = 40.0;
+    const EdgeInsets buttonPadding = EdgeInsets.symmetric(
+      vertical: 6,
+      horizontal: 12,
+    );
+    final TextStyle buttonTextStyle = const TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+      fontSize: 16,
+    );
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.accent, Color(0xFFFFC107)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.all(
-          Radius.circular(AppSizes.borderRadius),
-        ),
+        borderRadius: BorderRadius.circular(AppSizes.borderRadius),
         boxShadow: const [
           BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 4)),
         ],
@@ -38,27 +50,84 @@ class DateTimeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(date, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 6),
+          Text(
+            date,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text('Calendar View'),
-              ),
-              DropdownButton<String>(
-                value: selectedPayPeriod,
-                hint: const Text('Select Pay Period'),
-                items: payPeriods
-                    .map(
-                      (period) => DropdownMenuItem(
-                        value: period,
-                        child: Text(period),
+              // Calendar View Button
+              Expanded(
+                child: SizedBox(
+                  height: buttonHeight,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                        color: Colors.white,
+                        width: borderWidth,
                       ),
-                    )
-                    .toList(),
-                onChanged: onPayPeriodChanged,
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(borderRadius),
+                      ),
+                      textStyle: buttonTextStyle,
+                      padding: buttonPadding,
+                    ),
+                    onPressed: () {
+                      // TODO: Implement calendar view navigation
+                    },
+                    child: const Text(
+                      'Calendar View',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Dropdown Button
+              Expanded(
+                child: SizedBox(
+                  height: buttonHeight,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.white,
+                        width: borderWidth,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        borderRadius,
+                      ), // same as calendar button
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: selectedPayPeriod,
+                        items: payPeriods.map((period) {
+                          return DropdownMenuItem(
+                            value: period,
+                            child: Center(
+                              child: Text(
+                                period,
+                                style: buttonTextStyle,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: onPayPeriodChanged,
+                        dropdownColor: AppColors.accent.withOpacity(0.9),
+                        iconEnabledColor: Colors.white,
+                        style: buttonTextStyle,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
