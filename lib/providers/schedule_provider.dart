@@ -26,6 +26,7 @@ class ScheduleProvider with ChangeNotifier {
   Map<String, bool> _shiftCheckedStates = {};
   String _calendarType = AppStrings.none;
   List<dynamic>? _cookies; // <-- store cookies here
+  String? _selectedPayPeriod;
 
   List<ShiftModel> get shifts => _shifts;
   List<String> get payPeriods => _payPeriods;
@@ -33,6 +34,7 @@ class ScheduleProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   Map<String, bool> get shiftCheckedStates => _shiftCheckedStates;
   String get calendarType => _calendarType;
+  String? get selectedPayPeriod => _selectedPayPeriod;
 
   // Shift legend mapping for titles
   static const Map<String, String> _shiftLegend = {
@@ -175,6 +177,11 @@ class ScheduleProvider with ChangeNotifier {
                 ?.map((e) => e.toString())
                 .toList() ??
             [];
+
+        // ✅ Pick default (first) pay period if not set
+        if (_payPeriods.isNotEmpty && _selectedPayPeriod == null) {
+          _selectedPayPeriod = _payPeriods.first;
+        }
       }
 
       // Maintain previous checked states if possible
@@ -200,6 +207,11 @@ class ScheduleProvider with ChangeNotifier {
     String periodId,
   ) async {
     await fetchSchedule(username, password, periodId: periodId);
+  }
+
+  void setSelectedPayPeriod(String? period) {
+    _selectedPayPeriod = period;
+    notifyListeners();
   }
 
   void toggleShiftChecked(String date, bool isChecked) {

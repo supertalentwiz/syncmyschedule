@@ -189,7 +189,7 @@ exports.fetchWebFaaShifts = onCall(
           { waitUntil: "networkidle2" }
         );
 
-        if (page.url().includes("gatekeeper")) {
+        if (page.url().includes("oauth2")) {
           console.log("Cookies expired, logging in again...");
           await login();
           await page.goto(

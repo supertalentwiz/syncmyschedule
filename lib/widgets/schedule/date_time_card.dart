@@ -20,7 +20,7 @@ class DateTimeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Button styling constants
     const double borderRadius = 20.0;
-    const double borderWidth = 2.0;
+    const double borderWidth = 1.0;
     const double buttonHeight = 40.0;
     const EdgeInsets buttonPadding = EdgeInsets.symmetric(
       vertical: 6,
@@ -99,15 +99,22 @@ class DateTimeCard extends StatelessWidget {
                         color: Colors.white,
                         width: borderWidth,
                       ),
-                      borderRadius: BorderRadius.circular(
-                        borderRadius,
-                      ), // same as calendar button
+                      borderRadius: BorderRadius.circular(borderRadius),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         isExpanded: true,
-                        value: selectedPayPeriod,
+                        value: selectedPayPeriod?.isNotEmpty == true
+                            ? selectedPayPeriod
+                            : null,
+                        hint: Text(
+                          "Pay Period",
+                          style: buttonTextStyle.copyWith(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
                         items: payPeriods.map((period) {
                           return DropdownMenuItem(
                             value: period,
