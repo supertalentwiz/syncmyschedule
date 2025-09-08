@@ -396,6 +396,32 @@ class ScheduleProvider with ChangeNotifier {
 
           event.title = title;
           event.description = 'Imported by SyncMySchedule';
+
+          // ✅ Check for duplicates before inserting
+          final existingEventsResult = await plugin.retrieveEvents(
+            selectedCalendar.id!,
+            RetrieveEventsParams(
+              startDate: event.start!.subtract(const Duration(minutes: 1)),
+              endDate: event.end!.add(const Duration(minutes: 1)),
+            ),
+          );
+
+          bool alreadyExists = false;
+          if (existingEventsResult.isSuccess &&
+              existingEventsResult.data != null) {
+            alreadyExists = existingEventsResult.data!.any((existing) {
+              return existing.title == event.title &&
+                  existing.start?.isAtSameMomentAs(event.start!) == true &&
+                  existing.end?.isAtSameMomentAs(event.end!) == true;
+            });
+          }
+
+          if (alreadyExists) {
+            debugPrint("⏭️ Skipping existing shift on ${shift.date}: $title");
+            continue; // skip creating duplicate
+          }
+
+          // If not duplicate, create it
           final result = await plugin.createOrUpdateEvent(event);
           if (result?.isSuccess == false) {
             final errorMsgs = result?.errors

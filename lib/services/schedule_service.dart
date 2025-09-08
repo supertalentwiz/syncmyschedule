@@ -28,7 +28,7 @@ class ScheduleService {
     List<dynamic>? cookies,
   }) async {
     final callable = FirebaseFunctions.instance.httpsCallable(
-      'fetchWebFaaShifts',
+      'fetchFaaWebSchedulerShifts',
     );
 
     try {
