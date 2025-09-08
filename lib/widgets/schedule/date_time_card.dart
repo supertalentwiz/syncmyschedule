@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_sizes.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../providers/schedule_provider.dart';
+import '../common/calendar_selection_dialog.dart';
+import '../../constants/app_strings.dart';
 
 class DateTimeCard extends StatelessWidget {
   final String date;
@@ -78,8 +83,52 @@ class DateTimeCard extends StatelessWidget {
                       textStyle: buttonTextStyle,
                       padding: buttonPadding,
                     ),
-                    onPressed: () {
-                      // TODO: Implement calendar view navigation
+                    onPressed: () async {
+                      final scheduleProvider = Provider.of<ScheduleProvider>(
+                        context,
+                        listen: false,
+                      );
+                      final calendarType = scheduleProvider.calendarType;
+
+                      if (calendarType == AppStrings.android) {
+                        // Open Google Calendar
+                        final url = Uri.parse("https://calendar.google.com");
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      } else if (calendarType == AppStrings.iOSCalendar) {
+                        // Open iOS Calendar app (calshow:<timestamp>)
+                        final now =
+                            DateTime.now().millisecondsSinceEpoch ~/ 1000;
+                        final url = Uri.parse("calshow:$now");
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      } else if (calendarType == AppStrings.icsFileExport ||
+                          calendarType == AppStrings.none) {
+                        // Ask user to select which calendar to use
+                        showDialog(
+                          context: context,
+                          builder: (_) => CalendarSelectionDialog(
+                            scheduleProvider: scheduleProvider,
+                          ),
+                        );
+                      } else {
+                        // Fallback: No calendar selected
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Please select a calendar type in Profile",
+                            ),
+                          ),
+                        );
+                      }
                     },
                     child: const Text(
                       'Calendar View',

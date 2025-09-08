@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_sizes.dart';
+import '../../constants//app_colors.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -28,7 +29,7 @@ class CustomTextField extends StatelessWidget {
       children: [
         TextFormField(
           controller: controller,
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: AppColors.primary),
           obscureText: obscure,
           keyboardType: keyboardType,
           validator: validator,
