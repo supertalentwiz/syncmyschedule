@@ -12,7 +12,7 @@ const db = admin.firestore();
 
 console.log("Firestore projectId (resolved):", admin.app().options.projectId);
 
-exports.fetchWebFaaShifts = onCall(
+exports.fetchFaaWebSchedulerShifts = onCall(
   { timeoutSeconds: 300, memory: "1GiB", region: "us-central1" },
   async (request) => {
     const puppeteer = require("puppeteer-core");
@@ -189,7 +189,7 @@ exports.fetchWebFaaShifts = onCall(
           { waitUntil: "networkidle2" }
         );
 
-        if (page.url().includes("oauth2")) {
+        if (page.url().includes("SessionTimeout")) {
           console.log("Cookies expired, logging in again...");
           await login();
           await page.goto(
@@ -237,7 +237,7 @@ exports.fetchWebFaaShifts = onCall(
         return { schedule: scheduleData, payPeriod: periodId, cookies: newCookies };
       }
     } catch (err) {
-      console.error("Error in fetchWebFaaShifts:", err);
+      console.error("Error in fetchFaaWebSchedulerShifts:", err);
       if (err instanceof HttpsError) throw err;
       throw new HttpsError("internal", err.message || "Internal error");
     } finally {
