@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_sizes.dart';
@@ -20,6 +21,30 @@ class DateTimeCard extends StatelessWidget {
     this.selectedPayPeriod,
     this.onPayPeriodChanged,
   });
+
+  Future<void> _openSystemCalendar() async {
+    if (Platform.isIOS) {
+      // iOS Calendar: use `calshow:<secondsSinceEpoch>`
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
+      final url = Uri.parse("calshow:$now");
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+    } else if (Platform.isAndroid) {
+      // Android: open system calendar app at current time
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final url = Uri.parse("content://com.android.calendar/time/$now");
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        // fallback: open Google Calendar web
+        final gcal = Uri.parse("https://calendar.google.com");
+        if (await canLaunchUrl(gcal)) {
+          await launchUrl(gcal, mode: LaunchMode.externalApplication);
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,26 +115,9 @@ class DateTimeCard extends StatelessWidget {
                       );
                       final calendarType = scheduleProvider.calendarType;
 
-                      if (calendarType == AppStrings.android) {
-                        // Open Google Calendar
-                        final url = Uri.parse("https://calendar.google.com");
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      } else if (calendarType == AppStrings.iOSCalendar) {
-                        // Open iOS Calendar app (calshow:<timestamp>)
-                        final now =
-                            DateTime.now().millisecondsSinceEpoch ~/ 1000;
-                        final url = Uri.parse("calshow:$now");
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
+                      if (calendarType == AppStrings.android ||
+                          calendarType == AppStrings.iOSCalendar) {
+                        await _openSystemCalendar();
                       } else if (calendarType == AppStrings.icsFileExport ||
                           calendarType == AppStrings.none) {
                         // Ask user to select which calendar to use
@@ -120,7 +128,6 @@ class DateTimeCard extends StatelessWidget {
                           ),
                         );
                       } else {
-                        // Fallback: No calendar selected
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text(

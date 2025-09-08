@@ -417,7 +417,6 @@ class ScheduleProvider with ChangeNotifier {
           }
 
           if (alreadyExists) {
-            debugPrint("⏭️ Skipping existing shift on ${shift.date}: $title");
             continue; // skip creating duplicate
           }
 
