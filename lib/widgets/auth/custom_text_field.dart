@@ -28,7 +28,7 @@ class CustomTextField extends StatelessWidget {
       children: [
         TextFormField(
           controller: controller,
-          style: TextStyle(color: Theme.of(context).colorScheme.secondary),
+          style: TextStyle(color: Colors.black),
           obscureText: obscure,
           keyboardType: keyboardType,
           validator: validator,

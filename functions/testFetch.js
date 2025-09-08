@@ -7,7 +7,7 @@ async function testFetch(username, password, periodId, cookies) {
   if (cookies) body.data.cookies = cookies; // include cookies if provided
 
   const res = await fetch(
-    "http://127.0.0.1:5001/syncmyschedule-58722/us-central1/fetchWebFaaShifts",
+    "http://127.0.0.1:5001/syncmyschedule-58722/us-central1/fetchFaaWebSchedulerShifts",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
