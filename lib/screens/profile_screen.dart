@@ -27,6 +27,10 @@ class ProfileScreen extends StatelessWidget {
     final profile = Provider.of<ProfileProvider>(context).profile;
     final scheduleProvider = Provider.of<ScheduleProvider>(context);
 
+    // TODO: Replace with actual subscription status from RevenueCat/Firebase later
+    final subscriptionStatus = "Observer (Free)";
+    // final subscriptionStatus = profile.subscriptionPlan ?? "Observer (Free)";
+
     return Scaffold(
       appBar: CustomAppBar(title: AppStrings.profile),
       body: SafeArea(
@@ -47,12 +51,16 @@ class ProfileScreen extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: AppSizes.cardSpacing),
+
+                // Email card
                 InfoCard(
                   icon: Icons.email_outlined,
                   label: AppStrings.email,
                   value: profile.email,
                 ),
                 const SizedBox(height: AppSizes.cardSpacing),
+
+                // Calendar type card
                 InfoCard(
                   icon: Icons.calendar_today,
                   label: AppStrings.calendarType,
@@ -63,6 +71,18 @@ class ProfileScreen extends StatelessWidget {
                       scheduleProvider: scheduleProvider,
                     ),
                   ),
+                ),
+                const SizedBox(height: AppSizes.cardSpacing),
+
+                // New: Subscription card
+                InfoCard(
+                  icon: Icons.star_border_rounded,
+                  label: "Subscription",
+                  value: subscriptionStatus,
+                  onTap: () {
+                    // Navigate to subscription/paywall screen
+                    Navigator.pushNamed(context, '/subscription');
+                  },
                 ),
               ],
             ),

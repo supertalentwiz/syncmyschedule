@@ -28,7 +28,7 @@ class AppStrings {
   static const String schedulerId = 'Scheduler ID: ';
   static const String email = 'Email';
   static const String phone = 'Phone';
-  static const String choosePlan = 'Choose your subscription plan:';
+  static const String choosePlan = 'Choose your plan';
   static const String subscribedTo = 'Subscribed to';
   static const String cancel = 'Cancel';
   static const String subscribeButton = 'Subscribe';
@@ -41,4 +41,13 @@ class AppStrings {
   static const String ok = 'OK';
   static const String forgotPwd = 'Forgot Password? ';
   static const String resetPwd = 'Reset Here';
+  static const String observerPlan = 'Observer';
+  static const String observerPlanDesc =
+      'Basic manual sync with ICS file export only.';
+  static const String traineePlan = 'Trainee';
+  static const String traineePlanDesc =
+      'Full mobile calendar sync (iOS/Android) plus biometric lock.';
+  static const String cpcPlan = 'CPC (Premium)';
+  static const String cpcPlanDesc =
+      'Priority support and access to future premium features.';
 }
