@@ -6,7 +6,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:external_path/external_path.dart';
 import 'package:path_provider/path_provider.dart';
-// import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -25,8 +24,10 @@ class ScheduleProvider with ChangeNotifier {
   bool _isLoading = false;
   Map<String, bool> _shiftCheckedStates = {};
   String _calendarType = AppStrings.none;
-  List<dynamic>? _cookies; // <-- store cookies here
+  List<dynamic>? _cookies;
   String? _selectedPayPeriod;
+  String? _selectedGoogleCalendarId;
+  String? _selectedGoogleCalendarName;
 
   List<ShiftModel> get shifts => _shifts;
   List<String> get payPeriods => _payPeriods;
@@ -35,6 +36,7 @@ class ScheduleProvider with ChangeNotifier {
   Map<String, bool> get shiftCheckedStates => _shiftCheckedStates;
   String get calendarType => _calendarType;
   String? get selectedPayPeriod => _selectedPayPeriod;
+  String? get selectedGoogleCalendarId => _selectedGoogleCalendarId;
 
   // Shift legend mapping for titles
   static const Map<String, String> _shiftLegend = {
@@ -93,6 +95,8 @@ class ScheduleProvider with ChangeNotifier {
   Future<void> loadCalendarType() async {
     final prefs = await SharedPreferences.getInstance();
     _calendarType = prefs.getString('calendarType') ?? AppStrings.none;
+    _selectedGoogleCalendarId = prefs.getString('selectedGoogleCalendarId');
+    _selectedGoogleCalendarName = prefs.getString('selectedGoogleCalendarName');
     notifyListeners();
   }
 
@@ -100,6 +104,15 @@ class ScheduleProvider with ChangeNotifier {
     _calendarType = type;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('calendarType', type);
+    notifyListeners();
+  }
+
+  Future<void> setSelectedGoogleCalendar(String calendarId, String calendarName) async {
+    _selectedGoogleCalendarId = calendarId;
+    _selectedGoogleCalendarName = calendarName;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedGoogleCalendarId', calendarId);
+    await prefs.setString('selectedGoogleCalendarName', calendarName);
     notifyListeners();
   }
 
@@ -127,7 +140,6 @@ class ScheduleProvider with ChangeNotifier {
     await _storage.write(key: 'faa_password', value: password);
   }
 
-  // Load cookies from secure storage on app start
   Future<void> loadCookies() async {
     final stored = await _storage.read(key: 'faa_cookies');
     if (stored != null) {
@@ -150,23 +162,17 @@ class ScheduleProvider with ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
 
-      print(periodId);
-
       final result = await _scheduleService.fetchSchedule(
         username: username,
         password: password,
         periodId: periodId,
-        cookies: _cookies, // pass the internal cookie
+        cookies: _cookies,
       );
 
-      print(result);
-
-      // Save returned cookies for next fetch
       if (result['cookies'] != null) {
         await saveCookies(result['cookies']);
       }
 
-      // Extract schedule and pay periods
       _shifts =
           (result['schedule'] as List<dynamic>?)?.cast<ShiftModel>().toList() ??
           [];
@@ -178,13 +184,11 @@ class ScheduleProvider with ChangeNotifier {
                 .toList() ??
             [];
 
-        // ✅ Pick default (first) pay period if not set
         if (_payPeriods.isNotEmpty && _selectedPayPeriod == null) {
           _selectedPayPeriod = _payPeriods.first;
         }
       }
 
-      // Maintain previous checked states if possible
       _shiftCheckedStates = {
         for (var shift in _shifts)
           shift.date: _shiftCheckedStates[shift.date] ?? false,
@@ -272,24 +276,35 @@ class ScheduleProvider with ChangeNotifier {
           return 'Failed to retrieve calendars: ${calendarsResult.errors?.join(", ")}';
         }
 
-        // Try to find a Google Calendar (or fallback to first writable calendar)
-        Calendar? selectedCalendar;
-        for (var calendar in calendarsResult.data!) {
-          if (calendar.isReadOnly == false &&
-              calendar.accountType?.toLowerCase().contains('google') == true) {
-            selectedCalendar = calendar;
-            break;
-          }
-        }
-
         if (calendarsResult.data!.isEmpty) {
           return 'No calendars available on device';
         }
 
-        selectedCalendar ??= calendarsResult.data!.firstWhere(
-          (c) => c.isReadOnly == false,
-          orElse: () => calendarsResult.data!.first,
-        );
+        Calendar? selectedCalendar;
+        if (_calendarType == AppStrings.android && _selectedGoogleCalendarId != null) {
+          // Use the stored Google calendar if available
+          selectedCalendar = calendarsResult.data!.firstWhere(
+            (calendar) => calendar.id == _selectedGoogleCalendarId,
+            orElse: () => calendarsResult.data!.firstWhere(
+              (c) => c.isReadOnly == false,
+              orElse: () => calendarsResult.data!.first,
+            ),
+          );
+        } else {
+          // Original logic for iOS or if no Google calendar is selected
+          for (var calendar in calendarsResult.data!) {
+            if (_calendarType == AppStrings.android &&
+                calendar.isReadOnly == false &&
+                calendar.accountType?.toLowerCase().contains('google') == true) {
+              selectedCalendar = calendar;
+              break;
+            }
+          }
+          selectedCalendar ??= calendarsResult.data!.firstWhere(
+            (c) => c.isReadOnly == false,
+            orElse: () => calendarsResult.data!.first,
+          );
+        }
 
         if (selectedCalendar == null) {
           return 'No writable calendar found';
@@ -300,7 +315,6 @@ class ScheduleProvider with ChangeNotifier {
         for (var shift in selectedShifts) {
           final event = Event(selectedCalendar.id);
 
-          // Parse shift code dynamically
           final numericReg = RegExp(r'^\d+');
           String numericPart = '';
           String suffix = shift.code;
@@ -309,7 +323,6 @@ class ScheduleProvider with ChangeNotifier {
             suffix = shift.code.substring(numericPart.length);
           }
 
-          // Handle special suffixes: $, ^, !
           String specialSuffix = '';
           final specialReg = RegExp(r'[\$\^!]+$');
           if (specialReg.hasMatch(suffix)) {
@@ -317,7 +330,6 @@ class ScheduleProvider with ChangeNotifier {
             suffix = suffix.substring(0, suffix.length - specialSuffix.length);
           }
 
-          // Title with emoji
           String title = _shiftLegend[suffix] ?? suffix;
           if (specialSuffix.isNotEmpty) {
             title = _shiftLegend[specialSuffix] ?? title;
@@ -354,7 +366,6 @@ class ScheduleProvider with ChangeNotifier {
               );
               var endDateTime = startDateTime.add(Duration(hours: duration));
 
-              // Overnight → shift one day back
               if (endDateTime.day != baseDate.day) {
                 startDateTime = startDateTime.subtract(const Duration(days: 1));
                 endDateTime = endDateTime.subtract(const Duration(days: 1));
@@ -364,7 +375,6 @@ class ScheduleProvider with ChangeNotifier {
               event.end = tz.TZDateTime.from(endDateTime, location);
               event.allDay = false;
             } catch (e) {
-              // Fallback to full-day shift
               event.start = tz.TZDateTime.from(
                 DateTime(baseDate.year, baseDate.month, baseDate.day, 0, 0, 0),
                 tz.local,
@@ -397,7 +407,6 @@ class ScheduleProvider with ChangeNotifier {
           event.title = title;
           event.description = 'Imported by SyncMySchedule';
 
-          // ✅ Check for duplicates before inserting
           final existingEventsResult = await plugin.retrieveEvents(
             selectedCalendar.id!,
             RetrieveEventsParams(
@@ -417,10 +426,9 @@ class ScheduleProvider with ChangeNotifier {
           }
 
           if (alreadyExists) {
-            continue; // skip creating duplicate
+            continue;
           }
 
-          // If not duplicate, create it
           final result = await plugin.createOrUpdateEvent(event);
           if (result?.isSuccess == false) {
             final errorMsgs = result?.errors
@@ -431,9 +439,8 @@ class ScheduleProvider with ChangeNotifier {
           }
         }
 
-        return 'Successfully synced ${selectedShifts.length} shifts to ${selectedCalendar.name}';
+        return 'Successfully synced ${selectedShifts.length} shifts to ${_selectedGoogleCalendarName ?? selectedCalendar.name}';
       } else if (_calendarType == AppStrings.icsFileExport) {
-        // Generate ICS file content
         final ics = StringBuffer();
         ics.writeln('BEGIN:VCALENDAR');
         ics.writeln('VERSION:2.0');
@@ -499,7 +506,6 @@ class ScheduleProvider with ChangeNotifier {
               );
               endLocal = startLocal.add(Duration(hours: duration));
 
-              // Overnight → shift one day back
               if (endLocal.day != baseDate.day) {
                 startLocal = startLocal.subtract(const Duration(days: 1));
                 endLocal = endLocal.subtract(const Duration(days: 1));
@@ -521,7 +527,6 @@ class ScheduleProvider with ChangeNotifier {
               );
             }
           } else {
-            // All-day shift
             startLocal = DateTime(
               baseDate.year,
               baseDate.month,
@@ -562,7 +567,6 @@ class ScheduleProvider with ChangeNotifier {
 
         ics.writeln('END:VCALENDAR');
 
-        // Handle platform-specific ICS export
         final dir = await getApplicationDocumentsDirectory();
         final filename = 'shifts_${DateTime.now().millisecondsSinceEpoch}.ics';
         final path = '${dir.path}/$filename';
@@ -586,7 +590,6 @@ class ScheduleProvider with ChangeNotifier {
             return 'ICS file saved successfully to $newPath';
           } catch (e) {
             debugPrint('Error saving ICS on Android: $e');
-            // fallback: share instead of saving
             await Share.shareXFiles([XFile(path, mimeType: 'text/calendar')]);
             return 'ICS file shared instead (save failed): $e';
           }
